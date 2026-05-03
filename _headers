@@ -1,0 +1,14 @@
+# 针对所有HTML文件
+/*.txt
+  Content-Type: text/txt; charset=utf-8
+
+/*.html
+  Content-Type: text/html; charset=utf-8
+
+# 针对所有CSS文件
+/*.css
+  Content-Type: text/css; charset=utf-8
+
+# 针对所有JS文件
+/*.js
+  Content-Type: application/javascript; charset=utf-8
