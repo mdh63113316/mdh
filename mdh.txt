@@ -1,5 +1,15 @@
 {
   "sites": [
+    {
+      "key": "如意",
+      "name": "如意",
+      "type": 1,
+      "api": "https://cj.rycjapi.com/api.php/provide/vod/?ac=list",
+      "playUrl": "https://ruyiplayer.com?url=",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
      {
       "key": "速播影视",
       "name": "速播影视",
