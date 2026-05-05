@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TVBox配置编辑器 - 专业版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);
+            color: #1e293b;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #64748b;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        /* 双栏布局 */
+        .editor-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+        }
+
+        /* 表单卡片 */
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            border: 1px solid #eef2f6;
+            transition: box-shadow 0.2s;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            background: #fafcff;
+            border-bottom: 1px solid #eef2f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .card-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            color: #475569;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.8rem;
+            border: 1px solid #e2e8f0;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            background: #fff;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .array-item {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid #3b82f6;
+            position: relative;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.4rem;
+        }
+
+        .icon-btn.danger:hover {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .badge {
+            background: #e2e8f0;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        /* 右侧JSON预览 */
+        .json-preview {
+            position: sticky;
+            top: 1rem;
+            height: fit-content;
+        }
+
+        .json-viewer {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 70vh;
+            overflow: auto;
+        }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+
+        @media (max-width: 900px) {
+            .editor-layout {
+                grid-template-columns: 1fr;
+            }
+            .json-preview {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-code-branch"></i> TVBox 配置编辑器</h1>
+        <p>可视化编辑点播源、直播源、解析器，配置实时生成 | 数据保存在浏览器本地</p>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn btn-outline" id="newBtn"><i class="fas fa-file"></i> 新建</button>
+        <button class="btn btn-primary" id="saveBtn"><i class="fas fa-save"></i> 保存配置</button>
+        <button class="btn btn-success" id="exportImgBtn"><i class="fas fa-image"></i> 配置转图片</button>
+        <button class="btn btn-warning" id="importBtn"><i class="fas fa-upload"></i> 导入JSON</button>
+        <button class="btn btn-danger" id="clearBtn"><i class="fas fa-trash-alt"></i> 清空缓存</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+    </div>
+
+    <div class="editor-layout">
+        <!-- 左侧编辑区 -->
+        <div class="editor-form">
+            <!-- 点播源 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-film"></i> 点播源</h3>
+                    <button class="btn btn-outline" id="addVodBtn" style="padding: 0.3rem 1rem;"><i class="fas fa-plus"></i> 添加源</button>
+                </div>
+                <div class="card-body" id="vodListContainer"></div>
+            </div>
+
+            <!-- 直播源 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-tv"></i> 直播源</h3>
+                    <button class="btn btn-outline" id="addLiveBtn"><i class="fas fa-plus"></i> 添加直播</button>
+                </div>
+                <div class="card-body" id="liveListContainer"></div>
+            </div>
+
+            <!-- 解析配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-link"></i> 解析地址 & 广告过滤</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>解析地址列表</label>
+                        <div id="parseListArea"></div>
+                        <button class="btn btn-outline" id="addParseBtn" style="margin-top: 8px; width: 100%;">+ 添加解析</button>
+                    </div>
+                    <div class="form-group">
+                        <label>VIP解析标识</label>
+                        <input type="text" id="vipFlag" placeholder="例如: vip解析标识">
+                    </div>
+                    <div class="form-group">
+                        <label>解析广告过滤规则 (每行一个)</label>
+                        <textarea id="adFilter" rows="3" placeholder="输入过滤规则，一行一条"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 壁纸 & 爬虫 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-palette"></i> 外观 & 扩展</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>壁纸接口</label>
+                        <input type="text" id="wallpaperUrl" placeholder="https://... 留空则默认">
+                    </div>
+                    <div class="form-group">
+                        <label>自定义爬虫 Jar 包地址</label>
+                        <input type="text" id="spiderJar" placeholder="自定义爬虫地址">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧实时JSON预览 -->
+        <div class="json-preview">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-code"></i> 实时配置 JSON</h3>
+                    <button class="btn btn-outline" id="copyJsonBtn" style="padding: 0.2rem 0.8rem;"><i class="far fa-copy"></i> 复制</button>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <pre class="json-viewer" id="jsonPreview">{\n  "请编辑配置"...\n}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="toastMsg" class="toast-msg"></div>
+
+<script>
+    // ---------- 默认配置结构 ----------
+    let config = {
+        vodList: [],       // 点播源数组
+        liveList: [],      // 直播源数组
+        parseList: [],     // 解析地址列表
+        vipFlag: "",
+        adFilter: "",
+        wallpaper: "",
+        spiderJar: ""
+    };
+
+    // 辅助函数 - toast
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toastMsg');
+        toast.textContent = msg;
+        toast.style.backgroundColor = isError ? '#ef4444' : '#1e293b';
+        toast.style.opacity = '1';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 2000);
+    }
+
+    // 保存至 localStorage
+    function persistConfig() {
+        localStorage.setItem('tvbox_config_editor', JSON.stringify(config));
+        updateJsonPreview();
+        showToast("配置已保存至本地缓存");
+    }
+
+    // 加载本地缓存
+    function loadFromStorage() {
+        const saved = localStorage.getItem('tvbox_config_editor');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                config = { ...config, ...parsed };
+                showToast("已加载上次保存的配置");
+            } catch(e) { console.warn(e); }
+        } else {
+            // 初始演示数据
+            config.vodList = [
+                { key: "douban", name: "豆瓣影视", type: 1, api: "https://douban.api", playUrl: "", searchable: 1, quickSearch: 0, filterable: 0, ext: "", categories: [] }
+            ];
+            config.liveList = [
+                { name: "央视卫视", urls: ["http://example.com/cctv.m3u8"] }
+            ];
+            config.parseList = [
+                { name: "普通解析", type: 0, url: "https://parse.com/?url=", parseExt: "" }
+            ];
+            config.vipFlag = "qq,youku";
+            config.adFilter = "双巫广告\n片头广告";
+            config.wallpaper = "https://picsum.photos/1920/1080";
+            config.spiderJar = "";
+        }
+        renderAllForms();
+        updateJsonPreview();
+    }
+
+    // 全局渲染
+    function renderAllForms() {
+        renderVodSources();
+        renderLiveSources();
+        renderParseList();
+        document.getElementById('vipFlag').value = config.vipFlag || '';
+        document.getElementById('adFilter').value = config.adFilter || '';
+        document.getElementById('wallpaperUrl').value = config.wallpaper || '';
+        document.getElementById('spiderJar').value = config.spiderJar || '';
+    }
+
+    // 点播源渲染 (支持动态添加/删除)
+    function renderVodSources() {
+        const container = document.getElementById('vodListContainer');
+        if (!container) return;
+        if (config.vodList.length === 0) {
+            container.innerHTML = '<div class="array-item" style="text-align:center; color:#94a3b8;">暂无点播源，点击上方添加</div>';
+            return;
+        }
+        container.innerHTML = '';
+        config.vodList.forEach((vod, idx) => {
+            const div = document.createElement('div');
+            div.className = 'array-item';
+            div.innerHTML = `
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:8px;">
+                    <input type="text" placeholder="Key" value="${escapeHtml(vod.key || '')}" data-field="key" data-idx="${idx}" style="flex:1;">
+                    <input type="text" placeholder="Name" value="${escapeHtml(vod.name || '')}" data-field="name" data-idx="${idx}" style="flex:1;">
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:8px;">
+                    <select data-field="type" data-idx="${idx}" style="width:auto; flex:1;">
+                        ${[0,1,2,3,4].map(t => `<option value="${t}" ${vod.type == t ? 'selected' : ''}>类型${t} (${t===0?'xml':t===1?'json':t===2?'爬虫源':t===3?'自定义爬虫':'服务器爬虫'})</option>`).join('')}
+                    </select>
+                    <input type="text" placeholder="Api" value="${escapeHtml(vod.api || '')}" data-field="api" data-idx="${idx}" style="flex:2;">
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-bottom:8px;">
+                    <input type="text" placeholder="PlayUrl" value="${escapeHtml(vod.playUrl || '')}" data-field="playUrl" data-idx="${idx}" style="flex:2;">
+                    <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" ${vod.searchable==1 ? 'checked' : ''} data-check="searchable" data-idx="${idx}> 可搜索</label>
+                    <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" ${vod.quickSearch==1 ? 'checked' : ''} data-check="quickSearch" data-idx="${idx}> 快速搜索</label>
+                    <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" ${vod.filterable==1 ? 'checked' : ''} data-check="filterable" data-idx="${idx}> 可筛选</label>
+                </div>
+                <textarea placeholder="扩展信息 Ext" data-field="ext" data-idx="${idx}" rows="2" style="width:100%;">${escapeHtml(vod.ext || '')}</textarea>
+                <div style="margin-top: 8px;"><span class="badge">分类配置</span> <small style="color:#6c757d;">(每行格式: 分类名||url)</small>
+                <div id="categories-${idx}" style="margin-top: 4px;"></div>
+                <button class="icon-btn" data-add-cat="${idx}" style="font-size:0.7rem;"><i class="fas fa-plus"></i> 添加分类</button>
+                </div>
+                <div class="item-actions">
+                    <button class="icon-btn danger" data-del-vod="${idx}"><i class="fas fa-trash"></i> 删除</button>
+                </div>
+            `;
+            container.appendChild(div);
+            // 渲染分类子列表
+            const catContainer = div.querySelector(`#categories-${idx}`);
+            const categories = vod.categories || [];
+            if(catContainer) {
+                catContainer.innerHTML = '';
+                categories.forEach((cat, catIdx) => {
+                    const catDiv = document.createElement('div');
+                    catDiv.style.display = 'flex'; catDiv.style.gap = '6px'; catDiv.style.marginTop = '6px';
+                    catDiv.innerHTML = `
+                        <input type="text" placeholder="Group" value="${escapeHtml(cat.group || '')}" style="flex:1;" data-cat-field="group" data-vod="${idx}" data-catidx="${catIdx}">
+                        <input type="text" placeholder="Name/Url" value="${escapeHtml(cat.name || '')}" style="flex:2;" data-cat-field="name" data-vod="${idx}" data-catidx="${catIdx}">
+                        <button class="icon-btn danger" data-del-cat="${idx},${catIdx}"><i class="fas fa-times"></i></button>
+                    `;
+                    catContainer.appendChild(catDiv);
+                });
+            }
+        });
+        attachVodEvents();
+    }
+
+    function attachVodEvents() {
+        // 监听输入变化
+        document.querySelectorAll('[data-field]').forEach(el => {
+            el.removeEventListener('change', vodFieldHandler);
+            el.addEventListener('change', vodFieldHandler);
+        });
+        document.querySelectorAll('[data-check]').forEach(ch => {
+            ch.removeEventListener('change', vodCheckHandler);
+            ch.addEventListener('change', vodCheckHandler);
+        });
+        document.querySelectorAll('[data-del-vod]').forEach(btn => {
+            btn.removeEventListener('click', delVodHandler);
+            btn.addEventListener('click', delVodHandler);
+        });
+        document.querySelectorAll('[data-add-cat]').forEach(btn => {
+            btn.removeEventListener('click', addCatHandler);
+            btn.addEventListener('click', addCatHandler);
+        });
+        document.querySelectorAll('[data-del-cat]').forEach(btn => {
+            btn.removeEventListener('click', delCatHandler);
+            btn.addEventListener('click', delCatHandler);
+        });
+        // 分类字段动态绑定委托
+        document.querySelectorAll('[data-cat-field]').forEach(inp => {
+            inp.removeEventListener('change', catFieldChange);
+            inp.addEventListener('change', catFieldChange);
+        });
+    }
+
+    function vodFieldHandler(e) {
+        const idx = e.target.dataset.idx;
+        const field = e.target.dataset.field;
+        if(idx !== undefined && config.vodList[idx]) {
+            config.vodList[idx][field] = e.target.value;
+            updateJsonPreview();
+        }
+    }
+    function vodCheckHandler(e) {
+        const idx = e.target.dataset.idx;
+        const type = e.target.dataset.check;
+        if(idx !== undefined && config.vodList[idx]) {
+            config.vodList[idx][type] = e.target.checked ? 1 : 0;
+            updateJsonPreview();
+        }
+    }
+    function delVodHandler(e) {
+        const idx = e.target.closest('[data-del-vod]')?.dataset.delVod;
+        if(idx !== undefined) {
+            config.vodList.splice(parseInt(idx),1);
+            renderAllForms();
+            updateJsonPreview();
+            showToast("已删除点播源");
+        }
+    }
+    function addCatHandler(e) {
+        const idx = e.target.closest('[data-add-cat]')?.dataset.addCat;
+        if(idx !== undefined && config.vodList[idx]) {
+            if(!config.vodList[idx].categories) config.vodList[idx].categories = [];
+            config.vodList[idx].categories.push({ group: "", name: "" });
+            renderVodSources();
+            updateJsonPreview();
+        }
+    }
+    function delCatHandler(e) {
+        const val = e.target.closest('[data-del-cat]')?.dataset.delCat;
+        if(val) {
+            let [vodIdx, catIdx] = val.split(',');
+            if(config.vodList[vodIdx] && config.vodList[vodIdx].categories) {
+                config.vodList[vodIdx].categories.splice(parseInt(catIdx),1);
+                renderVodSources();
+                updateJsonPreview();
+            }
+        }
+    }
+    function catFieldChange(e) {
+        const target = e.target;
+        const vodIdx = target.dataset.vod;
+        const catIdx = target.dataset.catidx;
+        const field = target.dataset.catField;
+        if(vodIdx !== undefined && catIdx !== undefined && config.vodList[vodIdx]?.categories?.[catIdx]) {
+            config.vodList[vodIdx].categories[catIdx][field] = target.value;
+            updateJsonPreview();
+        }
+    }
+
+    // 直播源渲染
+    function renderLiveSources() {
+        const container = document.getElementById('liveListContainer');
+        container.innerHTML = '';
+        if(config.liveList.length === 0) {
+            container.innerHTML = '<div class="array-item">暂无直播源，请添加</div>';
+        }
+        config.liveList.forEach((live, idx) => {
+            const div = document.createElement('div');
+            div.className = 'array-item';
+            div.innerHTML = `
+                <input type="text" placeholder="直播源名称" value="${escapeHtml(live.name || '')}" data-live-name="${idx}" style="width:100%; margin-bottom:8px;">
+                <label>Urls (一行一个)</label>
+                <textarea data-live-urls="${idx}" rows="2">${Array.isArray(live.urls) ? live.urls.join('\n') : ''}</textarea>
+                <div class="item-actions"><button class="icon-btn danger" data-del-live="${idx}"><i class="fas fa-trash"></i> 删除</button></div>
+            `;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('[data-live-name]').forEach(inp => {
+            inp.removeEventListener('change', liveNameHandler);
+            inp.addEventListener('change', liveNameHandler);
+        });
+        document.querySelectorAll('[data-live-urls]').forEach(ta => {
+            ta.removeEventListener('change', liveUrlsHandler);
+            ta.addEventListener('change', liveUrlsHandler);
+        });
+        document.querySelectorAll('[data-del-live]').forEach(btn => {
+            btn.removeEventListener('click', delLiveHandler);
+            btn.addEventListener('click', delLiveHandler);
+        });
+    }
+    function liveNameHandler(e) { let idx = e.target.dataset.liveName; if(config.liveList[idx]) config.liveList[idx].name = e.target.value; updateJsonPreview();}
+    function liveUrlsHandler(e) { let idx = e.target.dataset.liveUrls; if(config.liveList[idx]) config.liveList[idx].urls = e.target.value.split('\n').filter(l=>l.trim()); updateJsonPreview();}
+    function delLiveHandler(e) { let idx = e.target.closest('[data-del-live]')?.dataset.delLive; if(idx!==undefined){ config.liveList.splice(idx,1); renderLiveSources(); updateJsonPreview();}}
+
+    // 解析地址
+    function renderParseList() {
+        const container = document.getElementById('parseListArea');
+        container.innerHTML = '';
+        config.parseList.forEach((parse, idx) => {
+            const div = document.createElement('div');
+            div.className = 'array-item';
+            div.innerHTML = `
+                <div style="display:flex; gap:8px;"><input placeholder="解析名称" value="${escapeHtml(parse.name || '')}" data-parse-name="${idx}" style="flex:1;"><input placeholder="URL" value="${escapeHtml(parse.url || '')}" data-parse-url="${idx}" style="flex:2;"></div>
+                <div style="display:flex; gap:8px; margin-top:6px;"><select data-parse-type="${idx}">${[0,1,2,3].map(t=>`<option value="${t}" ${parse.type==t?'selected':''}>类型${t}</option>`).join('')}</select><input placeholder="ParseExt" value="${escapeHtml(parse.parseExt||'')}" data-parse-ext="${idx}"></div>
+                <div class="item-actions"><button class="icon-btn danger" data-del-parse="${idx}">删除解析</button></div>
+            `;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('[data-parse-name]').forEach(inp=> inp.addEventListener('change', (e)=>{ let i=e.target.dataset.parseName; config.parseList[i].name=e.target.value; updateJsonPreview();}));
+        document.querySelectorAll('[data-parse-url]').forEach(inp=> inp.addEventListener('change', (e)=>{ let i=e.target.dataset.parseUrl; config.parseList[i].url=e.target.value; updateJsonPreview();}));
+        document.querySelectorAll('[data-parse-type]').forEach(sel=> sel.addEventListener('change', (e)=>{ let i=e.target.dataset.parseType; config.parseList[i].type=parseInt(e.target.value); updateJsonPreview();}));
+        document.querySelectorAll('[data-parse-ext]').forEach(inp=> inp.addEventListener('change', (e)=>{ let i=e.target.dataset.parseExt; config.parseList[i].parseExt=e.target.value; updateJsonPreview();}));
+        document.querySelectorAll('[data-del-parse]').forEach(btn=> btn.addEventListener('click', (e)=>{ let i=e.target.closest('[data-del-parse]')?.dataset.delParse; if(i!==undefined){ config.parseList.splice(i,1); renderParseList(); updateJsonPreview();}}));
+    }
+
+    function updateJsonPreview() {
+        const outObj = {
+            vodList: config.vodList,
+            liveList: config.liveList,
+            parseList: config.parseList,
+            vipFlag: document.getElementById('vipFlag').value,
+            adFilter: document.getElementById('adFilter').value,
+            wallpaper: document.getElementById('wallpaperUrl').value,
+            spiderJar: document.getElementById('spiderJar').value
+        };
+        document.getElementById('jsonPreview').innerText = JSON.stringify(outObj, null, 2);
+        // 实时同步到config辅助字段
+        config.vipFlag = outObj.vipFlag;
+        config.adFilter = outObj.adFilter;
+        config.wallpaper = outObj.wallpaper;
+        config.spiderJar = outObj.spiderJar;
+    }
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // 保存完整配置
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        updateJsonPreview();
+        persistConfig();
+    });
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        localStorage.removeItem('tvbox_config_editor');
+        config = { vodList:[], liveList:[], parseList:[], vipFlag:"", adFilter:"", wallpaper:"", spiderJar:"" };
+        renderAllForms();
+        updateJsonPreview();
+        showToast("已清空所有本地配置");
+    });
+    document.getElementById('newBtn').addEventListener('click', () => {
+        config = { vodList:[], liveList:[], parseList:[], vipFlag:"", adFilter:"", wallpaper:"", spiderJar:"" };
+        renderAllForms();
+        updateJsonPreview();
+        showToast("新建空白配置");
+    });
+    document.getElementById('addVodBtn').addEventListener('click', () => {
+        config.vodList.push({ key:"new", name:"新源", type:1, api:"", playUrl:"", searchable:0, quickSearch:0, filterable:0, ext:"", categories:[] });
+        renderVodSources();
+        updateJsonPreview();
+    });
+    document.getElementById('addLiveBtn').addEventListener('click', ()=>{ config.liveList.push({ name:"新直播", urls:[] }); renderLiveSources(); updateJsonPreview(); });
+    document.getElementById('addParseBtn').addEventListener('click', ()=>{ config.parseList.push({ name:"新解析", type:0, url:"", parseExt:"" }); renderParseList(); updateJsonPreview(); });
+    document.getElementById('copyJsonBtn').addEventListener('click', ()=> { const text = document.getElementById('jsonPreview').innerText; navigator.clipboard.writeText(text); showToast("JSON已复制"); });
+    document.getElementById('exportImgBtn').addEventListener('click', ()=>{ showToast("截图功能可手动使用浏览器截图工具", false); });
+    document.getElementById('importBtn').addEventListener('click', ()=>{ document.getElementById('importFile').click(); });
+    document.getElementById('importFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file){
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    config = { ...config, ...imported };
+                    renderAllForms();
+                    updateJsonPreview();
+                    showToast("导入成功");
+                } catch(e) { showToast("JSON格式错误", true); }
+            };
+            reader.readAsText(file);
+        }
+    });
+    document.getElementById('vipFlag').addEventListener('input', updateJsonPreview);
+    document.getElementById('adFilter').addEventListener('input', updateJsonPreview);
+    document.getElementById('wallpaperUrl').addEventListener('input', updateJsonPreview);
+    document.getElementById('spiderJar').addEventListener('input', updateJsonPreview);
+
+    loadFromStorage();
+</script>
+</body>
+</html>
