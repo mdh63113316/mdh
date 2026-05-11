@@ -3,1609 +3,920 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TVBox 配置编辑器 - 增强版</title>
+    <title>TVBox 配置编辑器</title>
     <style>
         :root {
-            --bg: #f0f2f5;
-            --card-bg: #ffffff;
-            --text: #1a1a2e;
-            --text-secondary: #555;
-            --border: #e0e0e0;
-            --primary: #4f6ef7;
-            --primary-hover: #3b54d4;
-            --danger: #e74c3c;
-            --danger-hover: #c0392b;
-            --success: #27ae60;
-            --warning: #f39c12;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            --radius: 12px;
-            --radius-sm: 8px;
-            --transition: 0.2s ease;
-            --nav-width: 210px;
-            --header-height: 56px;
-            --input-bg: #f8f9fa;
-            --tag-bg: #eef1ff;
-            --tag-color: #4f6ef7;
-            --code-bg: #1e1e2e;
-            --code-text: #cdd6f4;
-            --modal-overlay: rgba(0, 0, 0, 0.5);
-            --badge-bg: #e8f5e9;
-            --badge-color: #2e7d32;
-        }
-
-        .dark-mode {
-            --bg: #1a1a2e;
-            --card-bg: #222240;
-            --text: #e0e0e0;
-            --text-secondary: #aaa;
-            --border: #3a3a5c;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-            --input-bg: #2a2a45;
-            --tag-bg: #2a2a50;
-            --tag-color: #8b9cf7;
-            --code-bg: #0d0d1a;
-            --code-text: #b4c2f0;
-            --modal-overlay: rgba(0, 0, 0, 0.7);
-            --badge-bg: #1a3a1a;
-            --badge-color: #4caf50;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            min-height: 100vh;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        /* 侧边导航 */
-        .sidebar {
-            width: var(--nav-width);
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            padding: 16px 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s;
-        }
-        .sidebar .logo {
-            padding: 8px 20px 20px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary);
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 8px;
-        }
-        .sidebar .logo svg {
-            width: 28px;
-            height: 28px;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 11px 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            border-left: 3px solid transparent;
-            transition: all var(--transition);
-            margin: 2px 8px;
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-        }
-        .nav-item:hover {
-            background: var(--input-bg);
-            color: var(--text);
-        }
-        .nav-item.active {
-            background: var(--tag-bg);
-            color: var(--primary);
-            font-weight: 600;
-            border-left-color: var(--primary);
-        }
-        .nav-item .icon {
-            width: 18px;
-            text-align: center;
-            font-size: 1rem;
-        }
-        .sidebar-footer {
-            margin-top: auto;
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-
-        /* 主内容区 */
-        .main-content {
-            margin-left: var(--nav-width);
-            flex: 1;
-            padding: 20px 24px;
-            max-width: 1100px;
-            width: 100%;
-            transition: margin 0.3s;
-        }
-        .header-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            background: var(--card-bg);
-            padding: 14px 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-        .header-bar h1 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 9px 16px;
-            border: none;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all var(--transition);
-            white-space: nowrap;
-            letter-spacing: 0.3px;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(79, 110, 247, 0.35);
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1.5px solid var(--border);
-            color: var(--text);
-        }
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: var(--tag-bg);
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-        .btn-danger:hover {
-            background: var(--danger-hover);
-        }
-        .btn-success {
-            background: var(--success);
-            color: #fff;
-        }
-        .btn-warning {
-            background: var(--warning);
-            color: #fff;
-        }
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.78rem;
-            border-radius: 6px;
-        }
-        .btn-xs {
-            padding: 4px 8px;
-            font-size: 0.7rem;
-            border-radius: 4px;
-        }
-
-        /* 面板 */
-        .panel {
-            display: none;
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            margin-bottom: 16px;
-            animation: fadeIn 0.25s ease;
-        }
-        .panel.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .panel h3 {
-            font-size: 1.05rem;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-        .panel h3 .badge {
-            font-size: 0.7rem;
-            background: var(--badge-bg);
-            color: var(--badge-color);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        /* 表格 */
-        .table-wrap {
-            overflow-x: auto;
-            margin: 8px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.82rem;
-            min-width: 700px;
-        }
-        table th,
-        table td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-        table th {
-            background: var(--input-bg);
-            font-weight: 600;
-            color: var(--text);
-            position: sticky;
-            top: 0;
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        table tbody tr {
-            transition: background 0.15s;
-        }
-        table tbody tr:hover {
-            background: var(--input-bg);
-        }
-        table input,
-        table select {
-            width: 100%;
-            min-width: 60px;
-            padding: 7px 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            background: var(--input-bg);
-            color: var(--text);
-            transition: all var(--transition);
-        }
-        table input:focus,
-        table select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.1);
-        }
-        table select {
-            cursor: pointer;
-            min-width: 80px;
-        }
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--tag-bg);
-            color: var(--tag-color);
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-        .tag:hover {
-            filter: brightness(0.9);
-        }
-        .tag .remove-tag {
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 2px;
-            opacity: 0.6;
-        }
-        .tag .remove-tag:hover {
-            opacity: 1;
-        }
-
-        /* 代码区 */
-        .code-area {
-            background: var(--code-bg);
-            color: var(--code-text);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.8rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            max-height: 500px;
-            overflow-y: auto;
-            line-height: 1.5;
-            border: 1px solid var(--border);
-        }
-
-        /* Toast */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .toast {
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-            color: #fff;
-            font-weight: 500;
-            font-size: 0.85rem;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-            max-width: 380px;
-        }
-        .toast.success {
-            background: #27ae60;
-        }
-        .toast.error {
-            background: #e74c3c;
-        }
-        .toast.info {
-            background: #4f6ef7;
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateX(120%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* 模态框 */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--modal-overlay);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease;
-        }
-        .modal {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 24px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        .modal h3 {
-            margin-bottom: 16px;
-            color: var(--text);
-        }
-        .modal .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-            padding: 0 4px;
-            line-height: 1;
-        }
-        .modal .close-btn:hover {
-            color: var(--danger);
-        }
-        .form-group {
-            margin-bottom: 12px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 4px;
-            font-size: 0.82rem;
-            color: var(--text);
-        }
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.85rem;
-            background: var(--input-bg);
-            color: var(--text);
-        }
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-            font-family: 'SF Mono', 'Consolas', monospace;
-        }
-
-        /* 模板卡片 */
-        .template-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .template-card {
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 14px;
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-        .template-card:hover {
-            border-color: var(--primary);
-            box-shadow: 0 4px 16px rgba(79, 110, 247, 0.2);
-            transform: translateY(-2px);
-        }
-        .template-card .tpl-name {
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 4px;
-        }
-        .template-card .tpl-desc {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-        .template-card .tpl-tag {
-            display: inline-block;
-            font-size: 0.68rem;
-            background: var(--badge-bg);
-            color: var(--badge-color);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        /* 响应式 */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 60px;
-                padding: 10px 0;
-            }
-            .sidebar .logo span,
-            .nav-item span,
-            .sidebar-footer {
-                display: none;
-            }
-            .sidebar .logo {
-                justify-content: center;
-                padding: 8px;
-            }
-            .nav-item {
-                justify-content: center;
-                padding: 12px;
-                border-radius: var(--radius-sm);
-                margin: 2px 6px;
-                border-left: none;
-            }
-            .main-content {
-                margin-left: 60px;
-                padding: 12px;
-            }
-            .header-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-group {
-                justify-content: center;
-            }
-            table {
-                font-size: 0.7rem;
-            }
-            table th,
-            table td {
-                padding: 6px 4px;
-            }
-        }
+            --bg: #0f1119; --surface: #1a1d2e; --surface2: #242736; --accent: #e94560;
+            --text: #e0e0e0; --text2: #8b8fa3; --border: #2a2d3e; --hover: #2f3247;
+            --input-bg: #161823; --success: #4caf84; --warning: #f0a040;
+            --radius: 10px; --transition: 0.2s ease;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; min-height: 100vh; line-height: 1.6; }
+        .app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+        .app-header .logo { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #ff6b6b, #feca57); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .app-header .actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all var(--transition); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn:hover { background: var(--hover); border-color: var(--accent); }
+        .btn-accent { background: var(--accent); color: #fff; border: none; }
+        .btn-accent:hover { filter: brightness(1.2); }
+        .btn-primary { background: #2d4f7c; color: #fff; border: none; }
+        .btn-success { background: var(--success); color: #fff; border: none; }
+        .btn-warning { background: var(--warning); color: #111; border: none; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; background: var(--surface); border-radius: var(--radius); padding: 4px; overflow-x: auto; }
+        .tab { padding: 10px 16px; border: none; background: transparent; color: var(--text2); cursor: pointer; border-radius: 6px; font-size: 0.85rem; font-weight: 500; transition: all var(--transition); white-space: nowrap; }
+        .tab:hover { color: #fff; background: var(--hover); }
+        .tab.active { background: var(--accent); color: #fff; font-weight: 600; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .card h3 { margin-bottom: 14px; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .badge { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; font-weight: 400; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: var(--text2); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: #ddd; font-size: 0.85rem; font-family: monospace; transition: border var(--transition); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233,68,96,0.15); }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+        .item-list { list-style: none; }
+        .item-list li { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all var(--transition); }
+        .item-list li:hover { border-color: var(--accent); background: #2a2e42; }
+        .item-list li.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233,68,96,0.2); }
+        .item-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 500; background: #3a2a50; color: #c0a0e0; }
+        .empty-state { text-align: center; padding: 20px; color: var(--text2); }
+        .code-area textarea { background: #0a0b12; color: #c0d0e0; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; width: 100%; min-height: 450px; font-family: monospace; font-size: 0.8rem; line-height: 1.7; resize: vertical; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--success); color: #111; padding: 12px 24px; border-radius: 20px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 200; }
+        .toast.show { opacity: 1; }
+        .mt-2 { margin-top: 12px; } .text-sm { font-size: 0.8rem; } .text-muted { color: var(--text2); }
+        .group-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 12px; }
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .group-title { font-weight: 600; font-size: 1rem; color: #fff; min-width: 120px; display: flex; align-items: center; gap: 6px; }
+        .group-title input { width: 160px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--accent); background: var(--input-bg); color: #fff; font-size: 0.9rem; }
+        .channel-item { background: #1e2032; border-radius: 6px; padding: 10px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+        .channel-name-input { flex: 1; min-width: 150px; }
+        .urls-container { flex: 3; display: flex; flex-direction: column; gap: 4px; }
+        .url-row { display: flex; gap: 4px; align-items: center; }
+        .inline-rule-editor { background: var(--surface2); border-radius: 8px; padding: 15px; margin-bottom: 12px; }
     </style>
 </head>
 <body>
+<div class="app-header">
+    <span class="logo">⚙️ TVBox 配置编辑器 Pro</span>
+    <span class="text-sm text-muted"> · </span>
+    <div class="actions">
+        <button class="btn btn-primary" id="btn-visual" onclick="switchMode('visual')">📋 可视化</button>
+        <button class="btn" id="btn-source" onclick="switchMode('source')">📝 源码</button>
+        <button class="btn btn-success" onclick="copyConfig()">📋 一键复制</button>
+        <button class="btn" onclick="saveConfig()">💾 保存</button>
+        <button class="btn btn-warning" onclick="clearAll()">🗑️ 清空</button>
+    </div>
+</div>
 
-    <!-- 侧边栏 -->
-    <nav class="sidebar">
-        <div class="logo">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM4 6h9v7H4V6zm10 0h6v4h-6V6zm6 6H4v5h16v-5z"/></svg>
-            <span>TVBox 编辑器</span>
-        </div>
-        <div class="nav-item active" data-panel="panel-dianshi"><span class="icon">📺</span><span>点播源</span></div>
-        <div class="nav-item" data-panel="panel-live"><span class="icon">📡</span><span>直播源</span></div>
-        <div class="nav-item" data-panel="panel-parse"><span class="icon">🔗</span><span>解析地址</span></div>
-        <div class="nav-item" data-panel="panel-vip"><span class="icon">⭐</span><span>VIP解析标识</span></div>
-        <div class="nav-item" data-panel="panel-ijk"><span class="icon">⚙️</span><span>IJK解码配置</span></div>
-        <div class="nav-item" data-panel="panel-ad"><span class="icon">🛡️</span><span>广告过滤</span></div>
-        <div class="nav-item" data-panel="panel-wallpaper"><span class="icon">🖼️</span><span>壁纸</span></div>
-        <div class="nav-item" data-panel="panel-spider"><span class="icon">🕷️</span><span>自定义爬虫</span></div>
-        <div class="nav-item" data-panel="panel-templates"><span class="icon">📋</span><span>配置模板推荐</span></div>
-        <div class="sidebar-footer">💾 数据存于浏览器缓存</div>
-    </nav>
-
-    <!-- 主内容 -->
-    <main class="main-content">
-        <!-- 顶栏 -->
-        <div class="header-bar">
-            <h1>📝 TVBox 配置编辑器</h1>
-            <div class="btn-group">
-                <button class="btn btn-outline btn-sm" onclick="switchView('visual')" id="btn-visual">👁️ 可视</button>
-                <button class="btn btn-outline btn-sm" onclick="switchView('source')" id="btn-source">📄 源码</button>
-                <button class="btn btn-warning btn-sm" onclick="clearAll()">🗑️ 清空</button>
-                <button class="btn btn-success btn-sm" onclick="saveConfig()">💾 保存</button>
-                <button class="btn btn-primary btn-sm" onclick="exportImage()">🖼️ 配置转图片</button>
-                <button class="btn btn-outline btn-sm" onclick="exportJSON()">📥 导出JSON</button>
-                <button class="btn btn-outline btn-sm" onclick="importJSON()">📤 导入JSON</button>
-                <button class="btn btn-sm" id="btn-dark" onclick="toggleDark()" style="background:#555;color:#fff;">🌙 暗黑</button>
-            </div>
+<div class="container">
+    <div id="visual-mode" class="mode active">
+        <div class="tabs" id="config-tabs">
+            <button class="tab active" data-panel="sites-panel">📡 点播源</button>
+            <button class="tab" data-panel="lives-panel">📺 直播源</button>
+            <button class="tab" data-panel="parses-panel">🔍 解析地址</button>
+            <button class="tab" data-panel="vip-flags-panel">⭐ VIP解析</button>
+            <button class="tab" data-panel="ijk-panel">🎬 IJK解码</button>
+            <button class="tab" data-panel="ads-panel">🚫 广告过滤</button>
+            <button class="tab" data-panel="wallpaper-panel">🖼️ 壁纸</button>
+            <button class="tab" data-panel="spider-panel">🕷️ 爬虫</button>
+            <button class="tab" data-panel="recommend-panel">🌟 推荐接口</button>
         </div>
 
-        <!-- 源码视图 -->
-        <div class="panel" id="source-view">
-            <h3>📄 JSON 源码</h3>
-            <div class="code-area" id="source-code" contenteditable="false" style="min-height:400px;">// 切换到源码视图查看完整JSON配置</div>
-            <div style="margin-top:12px;display:flex;gap:8px;">
-                <button class="btn btn-primary btn-sm" onclick="applySourceEdit()">✅ 应用修改</button>
-                <button class="btn btn-outline btn-sm" onclick="refreshSourceView()">🔄 刷新</button>
+        <!-- 点播源面板 -->
+        <div id="sites-panel" class="panel active">
+            <div class="card">
+                <h3>📡 点播源 <span class="badge" id="sites-count">0</span></h3>
+                <ul class="item-list" id="sites-list"></ul>
+                <button class="btn btn-accent btn-sm mt-2" onclick="addSite()">＋ 添加点播源</button>
+            </div>
+            <div class="card" id="site-editor-card" style="display:none;">
+                <h3 id="site-editor-title">编辑点播源</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Key</label><input id="site-key" placeholder="如: csp_Yours"></div>
+                    <div class="form-group"><label>Name</label><input id="site-name" placeholder="如: 微笑影视"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Type</label><select id="site-type"><option value="0">0 - XML</option><option value="1" selected>1 - JSON</option><option value="2">2 - 爬虫源</option><option value="3">3 - CSP</option><option value="4">4 - 服务器爬虫</option></select></div>
+                    <div class="form-group"><label>可搜索</label><select id="site-searchable"><option value="1">可</option><option value="0">否</option></select></div>
+                    <div class="form-group"><label>快速搜索</label><select id="site-quicksearch"><option value="0">否</option><option value="1">可</option></select></div>
+                </div>
+                <div class="form-group"><label>Api</label><input id="site-api" placeholder="接口地址"></div>
+                <div class="form-group"><label>PlayUrl</label><input id="site-playurl" placeholder="播放地址(可选)"></div>
+                <div class="form-group"><label>扩展信息 (Ext JSON)</label><textarea id="site-ext" rows="2" placeholder='{"分类url":"https://.../{cateId}-{catePg}.html"}'></textarea></div>
+                <div class="form-group"><label>分类 (逗号分隔)</label><input id="site-categories" placeholder="电影,电视剧"></div>
+                <div class="mt-2">
+                    <button class="btn btn-success btn-sm" onclick="saveSite()">💾 保存</button>
+                    <button class="btn btn-sm" onclick="cancelEditSite()">取消</button>
+                    <button class="btn btn-warning btn-sm" id="btn-delete-site" style="display:none;" onclick="deleteSite()">🗑️ 删除</button>
+                </div>
             </div>
         </div>
 
-        <!-- 可视化面板容器 -->
-        <div id="visual-panels">
-            <!-- 点播源 -->
-            <div class="panel active" id="panel-dianshi">
-                <h3>📺 点播源 <span class="badge" id="badge-dianshi">0条</span></h3>
-                <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn btn-primary btn-sm" onclick="addDianshiRow()">＋ 添加</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteSelected('dianshi')">🗑️ 删除选中</button>
-                    <button class="btn btn-outline btn-sm" onclick="addCustomKey('dianshi')">🏷️ 添加自定义Key</button>
+        <!-- 直播源面板 -->
+        <div id="lives-panel" class="panel">
+            <div class="card">
+                <h3>📺 直播源 <span class="badge" id="lives-count">0</span></h3>
+                <div class="form-row" style="margin-bottom:12px; align-items:center;">
+                    <input id="new-group-name" placeholder="输入新分组名称" style="flex:1;">
+                    <button class="btn btn-accent btn-sm" onclick="addLiveGroup()">＋ 添加分组</button>
                 </div>
-                <div class="table-wrap">
-                    <table id="table-dianshi">
-                        <thead><tr><th><input type="checkbox" id="select-all-dianshi" onchange="toggleSelectAll('dianshi',this)"></th><th>Key</th><th>Name</th><th>Type</th><th>Api</th><th>PlayUrl</th><th>可搜索</th><th>快速搜索</th><th>可筛选</th><th>扩展信息</th><th>Categories</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+                <div id="lives-container"></div>
+            </div>
+        </div>
+
+        <!-- 解析地址面板 -->
+        <div id="parses-panel" class="panel">
+            <div class="card">
+                <h3>🔍 解析地址 <span class="badge" id="parses-count">0</span></h3>
+                <ul class="item-list" id="parses-list"></ul>
+                <button class="btn btn-accent btn-sm mt-2" onclick="addParse()">＋ 添加解析</button>
+            </div>
+            <div class="card" id="parse-editor-card" style="display:none;">
+                <h3 id="parse-editor-title">编辑解析</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Name</label><input id="parse-name" placeholder="如: 虾米解析"></div>
+                    <div class="form-group"><label>Type</label><select id="parse-type"><option value="0">0 - 普通</option><option value="1">1 - JSON</option><option value="2">2 - 多JSON</option><option value="3">3 - 聚合</option></select></div>
+                    <div class="form-group"><label>Url</label><input id="parse-url" placeholder="https://jx.xmflv.com/?url="></div>
                 </div>
-                <div style="margin-top:8px;">
-                    <strong style="font-size:0.82rem;">自定义Key组：</strong>
-                    <div id="custom-keys-dianshi" class="tag-list" style="margin-top:6px;"></div>
+                <div class="form-group"><label>ParseExt (支持的平台)</label><input id="parse-ext" placeholder="youku,qq,iqiyi,letv,sohu"></div>
+                <div class="mt-2">
+                    <button class="btn btn-success btn-sm" onclick="saveParse()">💾 保存</button>
+                    <button class="btn btn-sm" onclick="cancelEditParse()">取消</button>
+                    <button class="btn btn-warning btn-sm" id="btn-delete-parse" style="display:none;" onclick="deleteParse()">🗑️ 删除</button>
                 </div>
             </div>
+        </div>
 
-            <!-- 直播源 -->
-            <div class="panel" id="panel-live">
-                <h3>📡 直播源 <span class="badge" id="badge-live">0条</span></h3>
-                <div style="margin-bottom:10px;display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-sm" onclick="addLiveRow()">＋ 添加</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteSelected('live')">🗑️ 删除选中</button>
-                </div>
-                <div class="table-wrap">
-                    <table id="table-live">
-                        <thead><tr><th><input type="checkbox" id="select-all-live" onchange="toggleSelectAll('live',this)"></th><th>Name</th><th>Urls</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 解析地址 -->
-            <div class="panel" id="panel-parse">
-                <h3>🔗 解析地址 <span class="badge" id="badge-parse">0条</span></h3>
-                <div style="margin-bottom:10px;display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-sm" onclick="addParseRow()">＋ 添加</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteSelected('parse')">🗑️ 删除选中</button>
-                </div>
-                <div class="table-wrap">
-                    <table id="table-parse">
-                        <thead><tr><th><input type="checkbox" id="select-all-parse" onchange="toggleSelectAll('parse',this)"></th><th>Name</th><th>Type</th><th>Url</th><th>ParseExt</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- VIP解析标识 -->
-            <div class="panel" id="panel-vip">
+        <!-- VIP解析标识 -->
+        <div id="vip-flags-panel" class="panel">
+            <div class="card">
                 <h3>⭐ VIP解析标识</h3>
-                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">拖拽或点击标签管理VIP标识（youku, qq, iqiyi, qiyi, letv, sohu, tudou, pptv, mgtv, wasu）</p>
-                <div id="vip-tags" class="tag-list" style="gap:8px;"></div>
-                <div style="margin-top:12px;display:flex;gap:8px;">
-                    <input type="text" id="new-vip-tag" placeholder="输入新标识..." style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);flex:1;max-width:250px;">
-                    <button class="btn btn-primary btn-sm" onclick="addVipTag()">＋ 添加</button>
-                </div>
-            </div>
-
-            <!-- IJK解码配置 -->
-            <div class="panel" id="panel-ijk">
-                <h3>⚙️ IJK解码配置 <span style="font-size:0.7rem;color:var(--warning);">⚠️ 不了解不要修改</span></h3>
-                <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                    <div style="flex:1;min-width:300px;">
-                        <h4 style="font-size:0.9rem;margin-bottom:8px;">🔹 软解码</h4>
-                        <div id="ijk-soft-tags" class="tag-list" style="margin-bottom:8px;"></div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                            <input type="text" id="new-ijk-soft" placeholder="参数名" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);width:130px;font-size:0.78rem;">
-                            <select id="new-ijk-soft-cat" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:0.78rem;">
-                                <option value="1">1-FORMAT</option><option value="2">2-CODEC</option><option value="3">3-SWS</option><option value="4">4-PLAYER</option>
-                            </select>
-                            <input type="text" id="new-ijk-soft-val" placeholder="值" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);width:100px;font-size:0.78rem;">
-                            <button class="btn btn-primary btn-xs" onclick="addIjkParam('soft')">＋</button>
-                        </div>
-                    </div>
-                    <div style="flex:1;min-width:300px;">
-                        <h4 style="font-size:0.9rem;margin-bottom:8px;">🔸 硬解码</h4>
-                        <div id="ijk-hard-tags" class="tag-list" style="margin-bottom:8px;"></div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                            <input type="text" id="new-ijk-hard" placeholder="参数名" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);width:130px;font-size:0.78rem;">
-                            <select id="new-ijk-hard-cat" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:0.78rem;">
-                                <option value="1">1-FORMAT</option><option value="2">2-CODEC</option><option value="3">3-SWS</option><option value="4">4-PLAYER</option>
-                            </select>
-                            <input type="text" id="new-ijk-hard-val" placeholder="值" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);width:100px;font-size:0.78rem;">
-                            <button class="btn btn-primary btn-xs" onclick="addIjkParam('hard')">＋</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 广告过滤 -->
-            <div class="panel" id="panel-ad">
-                <h3>🛡️ 解析广告过滤</h3>
-                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">设置解析播放时WebView过滤的广告域名</p>
-                <textarea id="ad-filter" rows="5" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-family:'SF Mono','Consolas',monospace;font-size:0.82rem;resize:vertical;" placeholder="每行一个广告域名或URL片段..."></textarea>
-            </div>
-
-            <!-- 壁纸 -->
-            <div class="panel" id="panel-wallpaper">
-                <h3>🖼️ 壁纸接口</h3>
-                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">自定义壁纸接口URL，不需要则留空</p>
-                <input type="text" id="wallpaper-url" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:0.85rem;" placeholder="https://example.com/wallpaper/api">
-            </div>
-
-            <!-- 自定义爬虫 -->
-            <div class="panel" id="panel-spider">
-                <h3>🕷️ 自定义爬虫JAR</h3>
-                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">自定义爬虫jar代码包URL，不需要则留空</p>
-                <input type="text" id="spider-jar" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:0.85rem;" placeholder="https://example.com/spider.jar">
-            </div>
-
-            <!-- 配置模板推荐（新功能） -->
-            <div class="panel" id="panel-templates">
-                <h3>📋 配置模板推荐 <span class="badge">新功能</span></h3>
-                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">点击模板即可一键导入配置，快速体验TVBox</p>
-                <div class="template-grid" id="template-grid"></div>
+                <div class="form-group"><label>Flags (逗号分隔)</label><input id="flags-input"></div>
+                <button class="btn btn-success btn-sm" onclick="saveFlags()">💾 保存</button>
             </div>
         </div>
-    </main>
 
-    <!-- Toast容器 -->
-    <div class="toast-container" id="toast-container"></div>
+        <!-- IJK解码 -->
+        <div id="ijk-panel" class="panel">
+            <div class="card"><h3>🎬 IJK解码</h3></div>
+            <div class="card"><h4>软解码</h4><div id="ijk-soft-fields"></div><button class="btn btn-accent btn-sm mt-2" onclick="addIjkField('soft')">＋ 参数</button></div>
+            <div class="card"><h4>硬解码</h4><div id="ijk-hard-fields"></div><button class="btn btn-accent btn-sm mt-2" onclick="addIjkField('hard')">＋ 参数</button></div>
+        </div>
 
-    <!-- 隐藏的Canvas用于导出图片 -->
-    <canvas id="export-canvas" style="display:none;"></canvas>
+        <!-- 广告过滤 -->
+        <div id="ads-panel" class="panel">
+            <div class="card"><h3>🚫 广告过滤</h3></div>
+            <div class="card">
+                <h3>屏蔽域名列表</h3>
+                <ul class="item-list" id="ads-list"></ul>
+                <div class="mt-2" style="display:flex;gap:8px;">
+                    <input id="ad-domain-input" placeholder="输入域名" style="flex:1;">
+                    <button class="btn btn-accent btn-sm" onclick="addAdDomain()">＋ 添加</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>过滤规则</h3>
+                <ul class="item-list" id="rules-list"></ul>
+                <button class="btn btn-accent btn-sm mt-2" onclick="startAddRule()">＋ 添加规则</button>
+                <button class="btn btn-sm mt-2" onclick="resetAdsToDefault()">🔄 重置默认</button>
+            </div>
+        </div>
 
-    <script>
-        (function() {
-            // ============ 状态管理 ============
-            const DEFAULT_CONFIG = {
-                dianshi: [], // [{key,name,type,api,playUrl,searchable,quickSearch,filterable,extInfo,categories}]
-                live: [], // [{name,urls}]
-                parse: [], // [{name,type,url,parseExt}]
-                vipFlags: ['youku', 'qq', 'iqiyi', 'qiyi', 'letv', 'sohu', 'tudou', 'pptv', 'mgtv', 'wasu'],
-                ijkSoft: {}, // {paramName: {category, value}}
-                ijkHard: {},
-                adFilter: '',
-                wallpaper: '',
-                spiderJar: '',
-                customKeysDianshi: [], // 自定义key组
-            };
+        <!-- 壁纸/爬虫 -->
+        <div id="wallpaper-panel" class="panel">
+            <div class="card"><h3>🖼️ 壁纸</h3><div class="form-group"><label>API</label><input id="wallpaper-url"></div><button class="btn btn-success btn-sm" onclick="saveWallpaper()">💾 保存</button></div>
+        </div>
+        <div id="spider-panel" class="panel">
+            <div class="card"><h3>🕷️ 爬虫</h3><div class="form-group"><label>JAR</label><input id="spider-jar"></div><button class="btn btn-success btn-sm" onclick="saveSpider()">💾 保存</button></div>
+        </div>
 
-            let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-            let currentView = 'visual'; // 'visual' | 'source'
-            let selectedRows = { dianshi: new Set(), live: new Set(), parse: new Set() };
+        <!-- 推荐接口 -->
+        <div id="recommend-panel" class="panel">
+            <div class="card"><h3>🌟 推荐成熟接口</h3></div>
+            <div class="card"><h4>📡 点播源</h4><ul class="item-list" id="recommend-sites-list"></ul></div>
+            <div class="card"><h4>📺 直播源</h4><ul class="item-list" id="recommend-lives-list"></ul></div>
+        </div>
+    </div>
 
-            // ============ 初始化 ============
-            function init() {
-                loadConfig();
-                initDefaultIjkParams();
-                renderAll();
-                setupNavListeners();
-                switchView('visual');
-                initTemplates();
-                // 默认显示点播源面板
-                document.querySelector('.nav-item[data-panel="panel-dianshi"]').classList.add('active');
-                document.getElementById('panel-dianshi').classList.add('active');
-                updateAllBadges();
-            }
+    <!-- 源码模式 -->
+    <div id="source-mode" class="mode" style="display:none;">
+        <div class="card"><h3>📝 源码编辑</h3></div>
+        <div class="code-area"><textarea id="source-editor" spellcheck="false"></textarea></div>
+        <div class="mt-2" style="display:flex;gap:10px;">
+            <button class="btn btn-success" onclick="applySource()">✅ 应用源码</button>
+            <button class="btn btn-accent" onclick="formatSource()">💄 格式化</button>
+        </div>
+    </div>
+</div>
 
-            function initDefaultIjkParams() {
-                const defaultSoftParams = ['opensles', 'overlay-format', 'framedrop', 'soundtouch', 'start-on-prepared',
-                    'http-detect-range-support', 'fflags', 'skip_loop_filter', 'reconnect', 'max-buffer-size',
-                    'enable-accurate-seek', 'mediacodec', 'mediacodec-auto-rotate',
-                    'mediacodec-handle-resolution-change', 'mediacodec-hevc'
-                ];
-                const defaultHardParams = ['opensles', 'overlay-format', 'framedrop', 'soundtouch', 'start-on-prepared',
-                    'http-detect-range-support', 'fflags', 'skip_loop_filter', 'reconnect', 'max-buffer-size',
-                    'enable-accurate-seek', 'mediacodec', 'mediacodec-auto-rotate',
-                    'mediacodec-handle-resolution-change', 'mediacodec-hevc'
-                ];
-                if (Object.keys(config.ijkSoft).length === 0) {
-                    defaultSoftParams.forEach(p => { config.ijkSoft[p] = { category: '4', value: '' }; });
-                }
-                if (Object.keys(config.ijkHard).length === 0) {
-                    defaultHardParams.forEach(p => { config.ijkHard[p] = { category: '4', value: '' }; });
-                }
-            }
+<div class="toast" id="toast"></div>
 
-            function loadConfig() {
-                try {
-                    const saved = localStorage.getItem('tvbox_config_enhanced');
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
-                        config = { ...JSON.parse(JSON.stringify(DEFAULT_CONFIG)), ...parsed };
-                        // 确保嵌套对象合并
-                        if (parsed.ijkSoft) config.ijkSoft = { ...config.ijkSoft, ...parsed.ijkSoft };
-                        if (parsed.ijkHard) config.ijkHard = { ...config.ijkHard, ...parsed.ijkHard };
-                        if (parsed.vipFlags) config.vipFlags = parsed.vipFlags;
-                    }
-                } catch (e) {
-                    console.warn('加载配置失败，使用默认配置', e);
-                }
-                if (!config.ijkSoft || Object.keys(config.ijkSoft).length === 0) initDefaultIjkParams();
-                if (!config.ijkHard || Object.keys(config.ijkHard).length === 0) initDefaultIjkParams();
-                if (!config.vipFlags || config.vipFlags.length === 0) config.vipFlags = [...DEFAULT_CONFIG.vipFlags];
-                if (!config.customKeysDianshi) config.customKeysDianshi = [];
-            }
+<script>
+    // ==================== 数据定义 ====================
+    const DEFAULT = {
+        spider: '', wallpaper: 'https://t.alcy.cc/acg',
+        sites: [],
+        lives: [],
+        parses: [],
+        flags: ['youku','qq','iqiyi','qiyi','letv','sohu','tudou','pptv','mgtv','wasu','bilibili'],
+        ads: ["doubleclick.net","googleadservices.com","googlesyndication.com","adservice.google.com","adsrvr.org","adnxs.com"],
+        rules: [
+            { name:"M3U8广告片段", hosts:["ad.","ads."], regex:["\\/ad\\/","\\/preroll\\/"] },
+            { name:"统计", hosts:["google-analytics.com"], regex:["collect\\?"] }
+        ],
+        ijk: {
+            soft: [
+                { name:'opensles',value:'0',category:1},{ name:'overlay-format',value:'2',category:1},
+                { name:'framedrop',value:'1',category:4},{ name:'soundtouch',value:'1',category:4},
+                { name:'mediacodec',value:'0',category:2}
+            ],
+            hard: [
+                { name:'opensles',value:'0',category:1},{ name:'overlay-format',value:'2',category:1},
+                { name:'mediacodec',value:'1',category:2},{ name:'mediacodec-hevc',value:'1',category:2}
+            ]
+        }
+    };
 
-            function saveConfigToStorage() {
-                try {
-                    const toSave = JSON.parse(JSON.stringify(config));
-                    localStorage.setItem('tvbox_config_enhanced', JSON.stringify(toSave));
-                    showToast('配置已保存到浏览器缓存 ✅', 'success');
-                } catch (e) {
-                    showToast('保存失败：' + e.message, 'error');
-                }
-            }
+    const RECOMMEND_SITES = [
+        { key:'csp_RuYi', name:'如意影视', type:1, api:'https://cj.rycjapi.com/api.php/provide/vod', searchable:1, },
+        { key:'csp_JiSu', name:'极速影视', type:1, api:'https://jszyapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_MoDu', name:'魔都影视', type:1, api:'https://www.mdzyapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_YuLe', name:'娱乐影视', type:1, api:'https://cj.yuleapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_QingJu', name:'情剧影视', type:1, api:'https://cj.qingjuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_HuanJu', name:'幻剧影视', type:1, api:'https://cj.huanjuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_BaiJu', name:'百剧影视', type:1, api:'https://cj.baijuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_SouJu', name:'搜剧影视', type:1, api:'https://cj.soujuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_TianJu', name:'天剧影视', type:1, api:'https://cj.tianjuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_KuJu', name:'酷剧影视', type:1, api:'https://cj.kujuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_YiJu', name:'一剧影视', type:1, api:'https://cj.yijuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_ShiJu', name:'视剧影视', type:1, api:'https://cj.shijuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_JiJu', name:'吉剧影视', type:1, api:'https://cj.jijuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_LianJu', name:'恋剧影视', type:1, api:'https://cj.lianjuapi.com/api.php/provide/vod', searchable:1 },
+        { key:'csp_HaoJu', name:'好剧影视', type:1, api:'https://cj.haojuapi.com/api.php/provide/vod', searchable:1 },
+    ];
 
-            function saveConfig() {
-                // 先从DOM收集所有数据
-                collectAllDataFromDOM();
-                saveConfigToStorage();
-                updateAllBadges();
-            }
+    const RECOMMEND_LIVES = [
+        { group:'央视', channels:[
+            { name:'CCTV-1 综合', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001037/index.m3u8'] },
+            { name:'CCTV-2 财经', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001038/index.m3u8'] },    
+            { name:'CCTV-3 综艺', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001039/index.m3u8'] },
+            { name:'CCTV-4 国际', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001040/index.m3u8'] },
+            { name:'CCTV-5 体育', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001039/index.m3u8'] },
+            { name:'CCTV-6 电影', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001040/index.m3u8'] },
+            { name:'CCTV-7 军事农业', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001041/index.m3u8'] },
+            { name:'CCTV-8 电视剧', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001042/index.m3u8'] },
+            { name:'CCTV-9 纪录', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001043/index.m3u8'] },
+            { name:'CCTV-10 科教', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001044/index.m3u8'] },
+            { name:'CCTV-11 戏曲', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001045/index.m3u8'] },
+            { name:'CCTV-12 社会与法', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001046/index.m3u8'] },
+            { name:'CCTV-13 新闻', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001047/index.m3u8'] },
+            { name:'CCTV-14 少儿', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001048/index.m3u8'] },
+            { name:'CCTV-15 音乐', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001049/index.m3u8'] }
+        ]},
+        { group:'卫视', channels:[
+            { name:'湖南卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001175/index.m3u8'] },
+            { name:'浙江卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001176/index.m3u8'] },
+            { name:'江苏卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001177/index.m3u8'] },
+            { name:'东方卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001178/index.m3u8'] },
+            { name:'北京卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001179/index.m3u8'] },
+            { name:'深圳卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001180/index.m3u8'] },
+            { name:'东方卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001181/index.m3u8'] },  
+            { name:'天津卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001182/index.m3u8'] },
+            { name:'安徽卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001183/index.m3u8'] },
+            { name:'广东卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001184/index.m3u8'] },
+            { name:'四川卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001185/index.m3u8'] },
+            { name:'陕西卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001186/index.m3u8'] },
+            { name:'重庆卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001187/index.m3u8'] },
+            { name:'江西卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001188/index.m3u8'] },
+            { name:'广西卫视', urls:['http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001189/index.m3u8'] }
+        ]}
+    ];
 
-            function collectAllDataFromDOM() {
-                // 收集点播源表格数据
-                const tbody = document.querySelector('#table-dianshi tbody');
-                if (tbody) {
-                    config.dianshi = [];
-                    tbody.querySelectorAll('tr').forEach(tr => {
-                        const cells = tr.querySelectorAll('td');
-                        if (cells.length >= 10) {
-                            const keyInput = cells[1].querySelector('input');
-                            const nameInput = cells[2].querySelector('input');
-                            const typeSelect = cells[3].querySelector('select');
-                            const apiInput = cells[4].querySelector('input');
-                            const playUrlInput = cells[5].querySelector('input');
-                            const searchableSelect = cells[6].querySelector('select');
-                            const quickSearchSelect = cells[7].querySelector('select');
-                            const filterableSelect = cells[8].querySelector('select');
-                            const extInfoInput = cells[9].querySelector('input');
-                            const categoriesInput = cells[10].querySelector('input');
-                            config.dianshi.push({
-                                key: keyInput ? keyInput.value : '',
-                                name: nameInput ? nameInput.value : '',
-                                type: typeSelect ? typeSelect.value : '0',
-                                api: apiInput ? apiInput.value : '',
-                                playUrl: playUrlInput ? playUrlInput.value : '',
-                                searchable: searchableSelect ? searchableSelect.value : '0',
-                                quickSearch: quickSearchSelect ? quickSearchSelect.value : '0',
-                                filterable: filterableSelect ? filterableSelect.value : '0',
-                                extInfo: extInfoInput ? extInfoInput.value : '',
-                                categories: categoriesInput ? categoriesInput.value : '',
-                            });
-                        }
-                    });
-                }
-                // 收集直播源
-                const liveTbody = document.querySelector('#table-live tbody');
-                if (liveTbody) {
-                    config.live = [];
-                    liveTbody.querySelectorAll('tr').forEach(tr => {
-                        const cells = tr.querySelectorAll('td');
-                        if (cells.length >= 3) {
-                            config.live.push({
-                                name: cells[1].querySelector('input')?.value || '',
-                                urls: cells[2].querySelector('input')?.value || '',
-                            });
-                        }
-                    });
-                }
-                // 收集解析地址
-                const parseTbody = document.querySelector('#table-parse tbody');
-                if (parseTbody) {
-                    config.parse = [];
-                    parseTbody.querySelectorAll('tr').forEach(tr => {
-                        const cells = tr.querySelectorAll('td');
-                        if (cells.length >= 5) {
-                            config.parse.push({
-                                name: cells[1].querySelector('input')?.value || '',
-                                type: cells[2].querySelector('select')?.value || '0',
-                                url: cells[3].querySelector('input')?.value || '',
-                                parseExt: cells[4].querySelector('input')?.value || '',
-                            });
-                        }
-                    });
-                }
-                // 收集广告过滤
-                const adEl = document.getElementById('ad-filter');
-                if (adEl) config.adFilter = adEl.value;
-                // 收集壁纸
-                const wpEl = document.getElementById('wallpaper-url');
-                if (wpEl) config.wallpaper = wpEl.value;
-                // 收集爬虫
-                const spEl = document.getElementById('spider-jar');
-                if (spEl) config.spiderJar = spEl.value;
-                // VIP标识从DOM标签收集
-                const vipTagsEl = document.getElementById('vip-tags');
-                if (vipTagsEl) {
-                    config.vipFlags = [];
-                    vipTagsEl.querySelectorAll('.tag').forEach(tag => {
-                        const text = tag.textContent.replace(/×/g, '').trim();
-                        if (text) config.vipFlags.push(text);
-                    });
-                }
-                // IJK参数从标签收集
-                ['soft', 'hard'].forEach(type => {
-                    const containerId = type === 'soft' ? 'ijk-soft-tags' : 'ijk-hard-tags';
-                    const container = document.getElementById(containerId);
-                    if (container) {
-                        const obj = {};
-                        container.querySelectorAll('.tag').forEach(tag => {
-                            const nameEl = tag.querySelector('.ijk-name');
-                            const catEl = tag.querySelector('.ijk-cat');
-                            const valEl = tag.querySelector('.ijk-val');
-                            if (nameEl) {
-                                const name = nameEl.textContent.trim();
-                                obj[name] = {
-                                    category: catEl ? catEl.textContent.replace('cat:', '').trim() : '4',
-                                    value: valEl ? valEl.textContent.replace('val:', '').trim() : '',
-                                };
-                            }
-                        });
-                        if (type === 'soft') config.ijkSoft = obj;
-                        else config.ijkHard = obj;
-                    }
-                });
-                // 自定义Keys
-                const customKeysEl = document.getElementById('custom-keys-dianshi');
-                if (customKeysEl) {
-                    config.customKeysDianshi = [];
-                    customKeysEl.querySelectorAll('.tag').forEach(tag => {
-                        const text = tag.textContent.replace(/×/g, '').trim();
-                        if (text && text !== '自定义Key组：') config.customKeysDianshi.push(text);
-                    });
-                }
-            }
+    // ==================== 全局状态 ====================
+    let config = JSON.parse(JSON.stringify(DEFAULT));
+    let editSiteIdx = -1, editParseIdx = -1, editingGroupIdx = -1, ruleAdding = false;
 
-            function renderAll() {
-                renderDianshiTable();
-                renderLiveTable();
-                renderParseTable();
-                renderVipTags();
-                renderIjkTags();
-                renderAdFilter();
-                renderWallpaper();
-                renderSpiderJar();
-                renderCustomKeys();
-                updateAllBadges();
-                if (currentView === 'source') refreshSourceView();
-            }
+    // ==================== 工具函数 ====================
+    function esc(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-            function renderDianshiTable() {
-                const tbody = document.querySelector('#table-dianshi tbody');
-                tbody.innerHTML = '';
-                config.dianshi.forEach((item, index) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                <td><input type="checkbox" class="row-checkbox-dianshi" data-index="${index}" onchange="updateSelectedSet('dianshi',${index},this.checked)"></td>
-                <td><input type="text" value="${escapeAttr(item.key||'')}" placeholder="Key"></td>
-                <td><input type="text" value="${escapeAttr(item.name||'')}" placeholder="Name"></td>
-                <td><select><option value="0" ${item.type==='0'?'selected':''}>0-xml</option><option value="1" ${item.type==='1'?'selected':''}>1-json</option><option value="2" ${item.type==='2'?'selected':''}>2-爬虫源</option><option value="3" ${item.type==='3'?'selected':''}>3-自定义爬虫</option><option value="4" ${item.type==='4'?'selected':''}>4-服务器爬虫</option></select></td>
-                <td><input type="text" value="${escapeAttr(item.api||'')}" placeholder="Api"></td>
-                <td><input type="text" value="${escapeAttr(item.playUrl||'')}" placeholder="PlayUrl"></td>
-                <td><select><option value="0" ${item.searchable==='0'?'selected':''}>0-不可以</option><option value="1" ${item.searchable==='1'?'selected':''}>1-可以</option></select></td>
-                <td><select><option value="0" ${item.quickSearch==='0'?'selected':''}>0-不可以</option><option value="1" ${item.quickSearch==='1'?'selected':''}>1-可以</option></select></td>
-                <td><select><option value="0" ${item.filterable==='0'?'selected':''}>0-不可以</option><option value="1" ${item.filterable==='1'?'selected':''}>1-可以</option></select></td>
-                <td><input type="text" value="${escapeAttr(item.extInfo||'')}" placeholder="扩展信息"></td>
-                <td><input type="text" value="${escapeAttr(item.categories||'')}" placeholder="Categories"></td>
-              `;
-                    tbody.appendChild(tr);
-                });
-                selectedRows.dianshi.clear();
-                document.getElementById('select-all-dianshi').checked = false;
-            }
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
 
-            function renderLiveTable() {
-                const tbody = document.querySelector('#table-live tbody');
-                tbody.innerHTML = '';
-                config.live.forEach((item, index) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                <td><input type="checkbox" class="row-checkbox-live" data-index="${index}" onchange="updateSelectedSet('live',${index},this.checked)"></td>
-                <td><input type="text" value="${escapeAttr(item.name||'')}" placeholder="Name"></td>
-                <td><input type="text" value="${escapeAttr(item.urls||'')}" placeholder="Urls"></td>
-              `;
-                    tbody.appendChild(tr);
-                });
-                selectedRows.live.clear();
-                document.getElementById('select-all-live').checked = false;
-            }
+    function deepMerge(target, source) {
+        for (let k in source) {
+            if (source[k] && typeof source[k] === 'object' && !Array.isArray(source[k])) {
+                if (!target[k]) target[k] = {};
+                deepMerge(target[k], source[k]);
+            } else target[k] = source[k];
+        }
+        return target;
+    }
 
-            function renderParseTable() {
-                const tbody = document.querySelector('#table-parse tbody');
-                tbody.innerHTML = '';
-                config.parse.forEach((item, index) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                <td><input type="checkbox" class="row-checkbox-parse" data-index="${index}" onchange="updateSelectedSet('parse',${index},this.checked)"></td>
-                <td><input type="text" value="${escapeAttr(item.name||'')}" placeholder="Name"></td>
-                <td><select><option value="0" ${item.type==='0'?'selected':''}>0-普通</option><option value="1" ${item.type==='1'?'selected':''}>1-Json</option><option value="2" ${item.type==='2'?'selected':''}>2-多Json</option><option value="3" ${item.type==='3'?'selected':''}>3-聚合</option></select></td>
-                <td><input type="text" value="${escapeAttr(item.url||'')}" placeholder="Url"></td>
-                <td><input type="text" value="${escapeAttr(item.parseExt||'')}" placeholder="ParseExt"></td>
-              `;
-                    tbody.appendChild(tr);
-                });
-                selectedRows.parse.clear();
-                document.getElementById('select-all-parse').checked = false;
-            }
+    function generateJSON() {
+        const out = {};
+        if (config.spider) out.spider = config.spider;
+        if (config.wallpaper) out.wallpaper = config.wallpaper;
+        if (config.ads.length) out.ads = config.ads.slice();
+        if (config.rules.length) out.rules = config.rules.map(r => ({name:r.name, hosts:r.hosts||[], regex:r.regex||[]}));
+        if (config.sites.length) out.sites = config.sites.map(s => {
+            const o = { key:s.key, name:s.name, type:s.type, api:s.api, searchable:s.searchable };
+            if (s.quickSearch) o.quickSearch = s.quickSearch;
+            if (s.filterable) o.filterable = s.filterable;
+            if (s.playUrl) o.playUrl = s.playUrl;
+            if (s.ext && s.ext !== '') o.ext = s.ext;
+            if (s.categories && s.categories.length) o.categories = s.categories;
+            return o;
+        });
+        if (config.lives.length) out.lives = config.lives.map(g => ({
+            group: g.group,
+            channels: (g.channels||[]).map(c => ({ name:c.name, urls: c.urls||[''] }))
+        }));
+        if (config.parses.length) out.parses = config.parses.map(p => {
+            const o = { name:p.name, type:p.type, url:p.url };
+            if (p.ext) o.ext = p.ext;
+            return o;
+        });
+        if (config.flags.length) out.flags = config.flags.slice();
+        out.ijk = {
+            soft: config.ijk.soft.map(f => ({ ...f })),
+            hard: config.ijk.hard.map(f => ({ ...f }))
+        };
+        return JSON.stringify(out, null, 2);
+    }
 
-            function renderVipTags() {
-                const container = document.getElementById('vip-tags');
-                container.innerHTML = '';
-                config.vipFlags.forEach(flag => {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.innerHTML = `${escapeHTML(flag)} <span class="remove-tag" onclick="removeVipTag('${escapeAttr(flag)}')">×</span>`;
-                    container.appendChild(tag);
-                });
-            }
+    // ==================== 本地存储 ====================
+    function loadConfig() {
+        try {
+            const saved = localStorage.getItem('tvbox_pro_final');
+            if (saved) config = deepMerge(JSON.parse(JSON.stringify(DEFAULT)), JSON.parse(saved));
+        } catch (e) { /* 忽略损坏的数据 */ }
+    }
 
-            function renderIjkTags() {
-                ['soft', 'hard'].forEach(type => {
-                    const containerId = type === 'soft' ? 'ijk-soft-tags' : 'ijk-hard-tags';
-                    const container = document.getElementById(containerId);
-                    const obj = type === 'soft' ? config.ijkSoft : config.ijkHard;
-                    container.innerHTML = '';
-                    Object.entries(obj).forEach(([name, info]) => {
-                        const tag = document.createElement('span');
-                        tag.className = 'tag';
-                        tag.style.cssText = 'display:inline-flex;gap:4px;align-items:center;';
-                        tag.innerHTML = `
-                  <span class="ijk-name">${escapeHTML(name)}</span>
-                  <span class="ijk-cat" style="font-size:0.65rem;opacity:0.7;">cat:${info.category}</span>
-                  <span class="ijk-val" style="font-size:0.65rem;opacity:0.7;">${info.value?'val:'+info.value:''}</span>
-                  <span class="remove-tag" onclick="removeIjkParam('${type}','${escapeAttr(name)}')">×</span>
-                `;
-                        container.appendChild(tag);
-                    });
-                });
-            }
+    window.saveConfig = function() {
+        try {
+            localStorage.setItem('tvbox_pro_final', JSON.stringify(config));
+            toast('✅ 配置已保存');
+        } catch (e) {
+            toast('⚠️ 保存失败（可能处于无痕模式）');
+        }
+    };
 
-            function renderAdFilter() {
-                document.getElementById('ad-filter').value = config.adFilter || '';
-            }
+    window.clearAll = function() {
+        if (confirm('确定要清空所有配置吗？此操作不可恢复！')) {
+            config = JSON.parse(JSON.stringify(DEFAULT));
+            try { localStorage.removeItem('tvbox_pro_final'); } catch (e) {}
+            refreshAll();
+            toast('🗑️ 已清空');
+        }
+    };
 
-            function renderWallpaper() {
-                document.getElementById('wallpaper-url').value = config.wallpaper || '';
-            }
-
-            function renderSpiderJar() {
-                document.getElementById('spider-jar').value = config.spiderJar || '';
-            }
-
-            function renderCustomKeys() {
-                const container = document.getElementById('custom-keys-dianshi');
-                container.innerHTML = '<strong style="font-size:0.78rem;">自定义Key：</strong>';
-                (config.customKeysDianshi || []).forEach(key => {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.innerHTML = `${escapeHTML(key)} <span class="remove-tag" onclick="removeCustomKey('${escapeAttr(key)}')">×</span>`;
-                    container.appendChild(tag);
-                });
-            }
-
-            function updateAllBadges() {
-                document.getElementById('badge-dianshi').textContent = config.dianshi.length + '条';
-                document.getElementById('badge-live').textContent = config.live.length + '条';
-                document.getElementById('badge-parse').textContent = config.parse.length + '条';
-            }
-
-            // ============ 辅助函数 ============
-            function escapeHTML(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            function escapeAttr(str) {
-                return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g,
-                    '&gt;').replace(/'/g, '&#39;');
-            }
-
-            function showToast(msg, type = 'info') {
-                const container = document.getElementById('toast-container');
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.textContent = msg;
-                container.appendChild(toast);
-                setTimeout(() => { toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.3s'; }, 2000);
-                setTimeout(() => toast.remove(), 2500);
-            }
-
-            // ============ 导航切换 ============
-            function setupNavListeners() {
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.addEventListener('click', function() {
-                        if (currentView === 'source') switchView('visual');
-                        document.querySelectorAll('.nav-item').forEach(n => n.classList
-                            .remove('active'));
-                        this.classList.add('active');
-                        const panelId = this.dataset.panel;
-                        document.querySelectorAll('#visual-panels .panel').forEach(p => p
-                            .classList.remove('active'));
-                        const panel = document.getElementById(panelId);
-                        if (panel) panel.classList.add('active');
-                        // 滚动到面板
-                        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                });
-            }
-
-            function switchView(view) {
-                currentView = view;
-                const sourceView = document.getElementById('source-view');
-                const visualPanels = document.getElementById('visual-panels');
-                const btnVisual = document.getElementById('btn-visual');
-                const btnSource = document.getElementById('btn-source');
-
-                if (view === 'source') {
-                    sourceView.style.display = 'block';
-                    visualPanels.style.display = 'none';
-                    btnVisual.style.background = 'transparent';
-                    btnVisual.style.color = 'var(--text)';
-                    btnSource.style.background = 'var(--primary)';
-                    btnSource.style.color = '#fff';
-                    refreshSourceView();
-                } else {
-                    sourceView.style.display = 'none';
-                    visualPanels.style.display = 'block';
-                    btnSource.style.background = 'transparent';
-                    btnSource.style.color = 'var(--text)';
-                    btnVisual.style.background = 'var(--primary)';
-                    btnVisual.style.color = '#fff';
-                }
-            }
-
-            function refreshSourceView() {
-                collectAllDataFromDOM();
-                const sourceCode = document.getElementById('source-code');
-                const exportObj = buildExportObject();
-                sourceCode.textContent = JSON.stringify(exportObj, null, 2);
-            }
-
-            function applySourceEdit() {
-                try {
-                    const sourceCode = document.getElementById('source-code');
-                    const parsed = JSON.parse(sourceCode.textContent);
-                    importConfigFromObject(parsed);
-                    renderAll();
-                    showToast('源码已应用 ✅', 'success');
-                } catch (e) {
-                    showToast('JSON解析失败：' + e.message, 'error');
-                }
-            }
-
-            function buildExportObject() {
-                return {
-                    dianshi: config.dianshi,
-                    live: config.live,
-                    parse: config.parse,
-                    vipFlags: config.vipFlags,
-                    ijkSoft: config.ijkSoft,
-                    ijkHard: config.ijkHard,
-                    adFilter: config.adFilter,
-                    wallpaper: config.wallpaper,
-                    spiderJar: config.spiderJar,
-                    customKeysDianshi: config.customKeysDianshi || [],
-                };
-            }
-
-            function importConfigFromObject(obj) {
-                if (obj.dianshi) config.dianshi = obj.dianshi;
-                if (obj.live) config.live = obj.live;
-                if (obj.parse) config.parse = obj.parse;
-                if (obj.vipFlags) config.vipFlags = obj.vipFlags;
-                if (obj.ijkSoft) config.ijkSoft = obj.ijkSoft;
-                if (obj.ijkHard) config.ijkHard = obj.ijkHard;
-                if (obj.adFilter !== undefined) config.adFilter = obj.adFilter;
-                if (obj.wallpaper !== undefined) config.wallpaper = obj.wallpaper;
-                if (obj.spiderJar !== undefined) config.spiderJar = obj.spiderJar;
-                if (obj.customKeysDianshi) config.customKeysDianshi = obj.customKeysDianshi;
-                saveConfigToStorage();
-            }
-
-            // ============ 表格行操作 ============
-            function addDianshiRow() {
-                config.dianshi.push({
-                    key: '',
-                    name: '',
-                    type: '0',
-                    api: '',
-                    playUrl: '',
-                    searchable: '0',
-                    quickSearch: '0',
-                    filterable: '0',
-                    extInfo: '',
-                    categories: ''
-                });
-                renderDianshiTable();
-                updateAllBadges();
-                saveConfigToStorage();
-                showToast('已添加点播源行', 'info');
-            }
-
-            function addLiveRow() {
-                config.live.push({ name: '', urls: '' });
-                renderLiveTable();
-                updateAllBadges();
-                saveConfigToStorage();
-                showToast('已添加直播源行', 'info');
-            }
-
-            function addParseRow() {
-                config.parse.push({ name: '', type: '0', url: '', parseExt: '' });
-                renderParseTable();
-                updateAllBadges();
-                saveConfigToStorage();
-                showToast('已添加解析地址行', 'info');
-            }
-
-            function toggleSelectAll(type, checkbox) {
-                const checked = checkbox.checked;
-                const tbody = document.querySelector(`#table-${type} tbody`);
-                const checkboxes = tbody.querySelectorAll(`.row-checkbox-${type}`);
-                selectedRows[type].clear();
-                checkboxes.forEach((cb, i) => {
-                    cb.checked = checked;
-                    if (checked) selectedRows[type].add(i);
-                });
-            }
-
-            function updateSelectedSet(type, index, checked) {
-                if (checked) selectedRows[type].add(index);
-                else selectedRows[type].delete(index);
-                const allCb = document.getElementById(`select-all-${type}`);
-                const tbody = document.querySelector(`#table-${type} tbody`);
-                const total = tbody.querySelectorAll(`.row-checkbox-${type}`).length;
-                allCb.checked = selectedRows[type].size === total && total > 0;
-            }
-
-            function deleteSelected(type) {
-                const indices = Array.from(selectedRows[type]).sort((a, b) => b - a);
-                if (indices.length === 0) {
-                    showToast('请先勾选要删除的行', 'error');
-                    return;
-                }
-                if (!confirm(`确定删除选中的 ${indices.length} 行吗？`)) return;
-                const arrKey = type === 'dianshi' ? 'dianshi' : type === 'live' ? 'live' : 'parse';
-                indices.forEach(i => config[arrKey].splice(i, 1));
-                selectedRows[type].clear();
-                if (type === 'dianshi') renderDianshiTable();
-                else if (type === 'live') renderLiveTable();
-                else renderParseTable();
-                updateAllBadges();
-                saveConfigToStorage();
-                showToast(`已删除 ${indices.length} 行`, 'info');
-            }
-
-            function addCustomKey(type) {
-                if (type === 'dianshi') {
-                    const keyName = prompt('请输入自定义Key名称：');
-                    if (keyName && keyName.trim()) {
-                        if (!config.customKeysDianshi) config.customKeysDianshi = [];
-                        if (!config.customKeysDianshi.includes(keyName.trim())) {
-                            config.customKeysDianshi.push(keyName.trim());
-                            renderCustomKeys();
-                            saveConfigToStorage();
-                            showToast('自定义Key已添加', 'success');
-                        } else {
-                            showToast('该Key已存在', 'error');
-                        }
-                    }
-                }
-            }
-
-            function removeCustomKey(key) {
-                if (confirm(`确定删除自定义Key "${key}" 吗？`)) {
-                    config.customKeysDianshi = (config.customKeysDianshi || []).filter(k => k !== key);
-                    renderCustomKeys();
-                    saveConfigToStorage();
-                    showToast('已删除', 'info');
-                }
-            }
-
-            // ============ VIP标识操作 ============
-            function addVipTag() {
-                const input = document.getElementById('new-vip-tag');
-                const val = input.value.trim();
-                if (!val) return;
-                if (config.vipFlags.includes(val)) {
-                    showToast('该标识已存在', 'error');
-                    return;
-                }
-                config.vipFlags.push(val);
-                renderVipTags();
-                saveConfigToStorage();
-                input.value = '';
-                showToast('VIP标识已添加', 'success');
-            }
-
-            function removeVipTag(flag) {
-                config.vipFlags = config.vipFlags.filter(f => f !== flag);
-                renderVipTags();
-                saveConfigToStorage();
-                showToast('已移除', 'info');
-            }
-            // 暴露到全局
-            window.removeVipTag = removeVipTag;
-            window.addVipTag = addVipTag;
-
-            // ============ IJK参数操作 ============
-            function addIjkParam(type) {
-                const nameInput = document.getElementById(`new-ijk-${type}`);
-                const catSelect = document.getElementById(`new-ijk-${type}-cat`);
-                const valInput = document.getElementById(`new-ijk-${type}-val`);
-                const name = nameInput.value.trim();
-                if (!name) { showToast('请输入参数名', 'error'); return; }
-                const obj = type === 'soft' ? config.ijkSoft : config.ijkHard;
-                obj[name] = { category: catSelect.value, value: valInput.value.trim() };
-                renderIjkTags();
-                saveConfigToStorage();
-                nameInput.value = '';
-                valInput.value = '';
-                showToast('参数已添加', 'success');
-            }
-
-            function removeIjkParam(type, name) {
-                const obj = type === 'soft' ? config.ijkSoft : config.ijkHard;
-                delete obj[name];
-                renderIjkTags();
-                saveConfigToStorage();
-                showToast('已移除', 'info');
-            }
-            window.addIjkParam = addIjkParam;
-            window.removeIjkParam = removeIjkParam;
-            window.removeCustomKey = removeCustomKey;
-
-            // ============ 清空 ============
-            function clearAll() {
-                if (!confirm('确定清空所有配置吗？此操作不可恢复！')) return;
-                config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-                initDefaultIjkParams();
-                config.customKeysDianshi = [];
-                renderAll();
-                saveConfigToStorage();
-                showToast('已清空所有配置', 'info');
-            }
-
-            // ============ 导出/导入JSON ============
-            function exportJSON() {
-                collectAllDataFromDOM();
-                const obj = buildExportObject();
-                const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'tvbox-config-' + new Date().toISOString().slice(0, 10) + '.json';
-                a.click();
-                URL.revokeObjectURL(url);
-                showToast('JSON文件已下载', 'success');
-            }
-
-            function importJSON() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                input.onchange = function(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        try {
-                            const obj = JSON.parse(ev.target.result);
-                            importConfigFromObject(obj);
-                            renderAll();
-                            updateAllBadges();
-                            showToast('配置导入成功 ✅', 'success');
-                        } catch (err) {
-                            showToast('文件解析失败：' + err.message, 'error');
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            }
-
-            // ============ 配置转图片 ============
-            function exportImage() {
-                collectAllDataFromDOM();
-                const canvas = document.getElementById('export-canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = 800;
-                const jsonStr = JSON.stringify(buildExportObject(), null, 2);
-                const lines = jsonStr.split('\n');
-                const lineHeight = 18;
-                canvas.height = Math.max(400, lines.length * lineHeight + 80);
-                // 背景
-                ctx.fillStyle = '#1e1e2e';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // 标题
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 18px "SF Mono","Consolas",monospace';
-                ctx.fillText('TVBox 配置 - ' + new Date().toLocaleDateString(), 20, 35);
-                // 分隔线
-                ctx.strokeStyle = '#444';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(20, 48);
-                ctx.lineTo(canvas.width - 20, 48);
-                ctx.stroke();
-                // 代码
-                ctx.fillStyle = '#cdd6f4';
-                ctx.font = '13px "SF Mono","Consolas",monospace';
-                lines.forEach((line, i) => {
-                    ctx.fillText(line, 20, 70 + i * lineHeight);
-                });
-                // 水印
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.font = '11px "SF Mono","Consolas",monospace';
-                ctx.fillText('Generated by TVBox Config Editor', canvas.width - 300, canvas.height - 15);
-                // 下载
-                const url = canvas.toDataURL('image/png');
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'tvbox-config-' + Date.now() + '.png';
-                a.click();
-                showToast('图片已生成并下载', 'success');
-            }
-
-            // ============ 暗黑模式 ============
-            function toggleDark() {
-                document.body.classList.toggle('dark-mode');
-                const btn = document.getElementById('btn-dark');
-                if (document.body.classList.contains('dark-mode')) {
-                    btn.textContent = '☀️ 明亮';
-                    btn.style.background = '#f0c040';
-                    btn.style.color = '#333';
-                    localStorage.setItem('tvbox_dark_mode', '1');
-                } else {
-                    btn.textContent = '🌙 暗黑';
-                    btn.style.background = '#555';
-                    btn.style.color = '#fff';
-                    localStorage.setItem('tvbox_dark_mode', '0');
-                }
-            }
-
-            function initDarkMode() {
-                if (localStorage.getItem('tvbox_dark_mode') === '1') {
-                    document.body.classList.add('dark-mode');
-                    const btn = document.getElementById('btn-dark');
-                    btn.textContent = '☀️ 明亮';
-                    btn.style.background = '#f0c040';
-                    btn.style.color = '#333';
-                }
-            }
-
-            // ============ 配置模板推荐 ============
-            function initTemplates() {
-                const templates = [{
-                    name: '🌐 常用稳定配置',
-                    desc: '包含多个稳定的点播源和直播源，适合日常使用',
-                    tag: '推荐',
-                    data: {
-                        dianshi: [
-                            { key: 'candy', name: '糖果源', type: '0', api: 'https://raw.githubusercontent.com/candy/tvbox/main/candy.json',
-                                playUrl: '', searchable: '1', quickSearch: '1', filterable: '0', extInfo: '',
-                                categories: '' },
-                            { key: 'agit', name: 'agit源', type: '0', api: 'https://agit.ai/nbwz/lyy/raw/branch/master/xyl.json',
-                                playUrl: '', searchable: '1', quickSearch: '0', filterable: '1', extInfo: '',
-                                categories: '' },
-                        ],
-                        live: [{ name: 'IPTV直播', urls: 'https://raw.githubusercontent.com/example/iptv/main/live.txt' }],
-                        parse: [{ name: '解析1', type: '0', url: 'https://jx.example.com/parser.php?url=', parseExt: '' }],
-                        vipFlags: ['youku', 'qq', 'iqiyi', 'qiyi', 'letv', 'sohu', 'tudou', 'pptv', 'mgtv', 'wasu'],
-                    }
-                }, {
-                    name: '🎬 影视专用配置',
-                    desc: '优化影视点播体验，包含多个高速解析接口',
-                    tag: '热门',
-                    data: {
-                        dianshi: [
-                            { key: 'fast', name: '高速源', type: '1', api: 'https://fast.example.com/tv.json',
-                                playUrl: '', searchable: '1', quickSearch: '1', filterable: '1', extInfo: '',
-                                categories: '电影,电视剧,综艺,动漫' },
-                        ],
-                        live: [],
-                        parse: [{ name: '高速解析', type: '1', url: 'https://api.example.com/jx?url=',
-                        parseExt: 'youku,qq,iqiyi' }],
-                        vipFlags: ['youku', 'qq', 'iqiyi', 'qiyi', 'letv', 'mgtv'],
-                    }
-                }, {
-                    name: '📡 直播增强配置',
-                    desc: '丰富的直播源配置，包含国内外频道',
-                    tag: '直播',
-                    data: {
-                        dianshi: [],
-                        live: [
-                            { name: '国内综合', urls: 'https://example.com/cn_live.txt' },
-                            { name: '国际频道', urls: 'https://example.com/intl_live.txt' },
-                        ],
-                        parse: [],
-                        vipFlags: ['youku', 'qq', 'iqiyi'],
-                    }
-                }, {
-                    name: '🛠️ 开发者调试配置',
-                    desc: '包含自定义爬虫和IJK解码参数，适合开发者',
-                    tag: '开发',
-                    data: {
-                        dianshi: [
-                            { key: 'dev', name: '开发源', type: '3', api: '', playUrl: '', searchable: '1',
-                                quickSearch: '1', filterable: '1', extInfo: '', categories: '' },
-                        ],
-                        live: [],
-                        parse: [{ name: '调试解析', type: '3', url: 'https://dev.example.com/parse', parseExt: '*' }],
-                        vipFlags: ['youku', 'qq', 'iqiyi', 'qiyi', 'letv', 'sohu', 'tudou', 'pptv', 'mgtv', 'wasu'],
-                    }
-                }];
-                const grid = document.getElementById('template-grid');
-                grid.innerHTML = '';
-                templates.forEach(tpl => {
-                    const card = document.createElement('div');
-                    card.className = 'template-card';
-                    card.innerHTML = `
-                <div class="tpl-name">${tpl.name}</div>
-                <div class="tpl-desc">${tpl.desc}</div>
-                <span class="tpl-tag">${tpl.tag}</span>
-              `;
-                    card.addEventListener('click', () => {
-                        if (confirm(`确定导入模板"${tpl.name}"吗？当前配置将被覆盖！`)) {
-                            importConfigFromObject(tpl.data);
-                            if (!config.ijkSoft || Object.keys(config.ijkSoft).length === 0)
-                                initDefaultIjkParams();
-                            if (!config.ijkHard || Object.keys(config.ijkHard).length === 0)
-                                initDefaultIjkParams();
-                            if (!config.customKeysDianshi) config.customKeysDianshi = [];
-                            renderAll();
-                            updateAllBadges();
-                            showToast(`模板"${tpl.name}"已导入 ✅`, 'success');
-                            // 切换到点播源面板
-                            document.querySelectorAll('.nav-item').forEach(n => n.classList
-                                .remove('active'));
-                            const dianshiNav = document.querySelector(
-                                '.nav-item[data-panel="panel-dianshi"]');
-                            if (dianshiNav) dianshiNav.classList.add('active');
-                            document.querySelectorAll('#visual-panels .panel').forEach(p => p
-                                .classList.remove('active'));
-                            const panelDianshi = document.getElementById('panel-dianshi');
-                            if (panelDianshi) panelDianshi.classList.add('active');
-                        }
-                    });
-                    grid.appendChild(card);
-                });
-            }
-
-            // ============ 全局暴露 ============
-            window.switchView = switchView;
-            window.clearAll = clearAll;
-            window.saveConfig = saveConfig;
-            window.exportImage = exportImage;
-            window.exportJSON = exportJSON;
-            window.importJSON = importJSON;
-            window.toggleDark = toggleDark;
-            window.addDianshiRow = addDianshiRow;
-            window.addLiveRow = addLiveRow;
-            window.addParseRow = addParseRow;
-            window.toggleSelectAll = toggleSelectAll;
-            window.updateSelectedSet = updateSelectedSet;
-            window.deleteSelected = deleteSelected;
-            window.addCustomKey = addCustomKey;
-            window.refreshSourceView = refreshSourceView;
-            window.applySourceEdit = applySourceEdit;
-            window.removeVipTag = removeVipTag;
-            window.addVipTag = addVipTag;
-            window.addIjkParam = addIjkParam;
-            window.removeIjkParam = removeIjkParam;
-            window.removeCustomKey = removeCustomKey;
-
-            // ============ 启动 ============
-            init();
-            initDarkMode();
-            // 监听广告过滤、壁纸、爬虫输入变化自动保存
-            ['ad-filter', 'wallpaper-url', 'spider-jar'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', function() {
-                        clearTimeout(this._debounce);
-                        this._debounce = setTimeout(() => {
-                            collectAllDataFromDOM();
-                            saveConfigToStorage();
-                        }, 800);
-                    });
-                }
+    // ==================== 一键复制（修复版） ====================
+    window.copyConfig = function() {
+        const text = generateJSON();
+        // 优先使用现代 Clipboard API，失败后回退到 execCommand
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                toast('📋 已复制到剪贴板');
+            }).catch(() => {
+                fallbackCopy(text);
             });
-            // 定期自动保存表格数据
-            setInterval(() => {
-                collectAllDataFromDOM();
-                saveConfigToStorage();
-            }, 30000); // 每30秒自动保存
+        } else {
+            fallbackCopy(text);
+        }
+    };
 
-            console.log('✅ TVBox 配置编辑器已就绪');
-            console.log('📋 功能：点播源 | 直播源 | 解析地址 | VIP标识 | IJK解码 | 广告过滤 | 壁纸 | 爬虫 | 模板推荐');
-            console.log('💡 提示：数据保存在浏览器localStorage中，清空缓存会丢失，请定期导出JSON备份');
-        })();
-    </script>
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            const success = document.execCommand('copy');
+            if (success) {
+                toast('📋 已复制到剪贴板');
+            } else {
+                toast('⚠️ 复制失败，请手动复制源码');
+            }
+        } catch (err) {
+            toast('⚠️ 复制失败，请手动复制源码');
+        }
+        document.body.removeChild(textarea);
+    }
+
+    // ==================== 模式切换 ====================
+    window.switchMode = function(mode) {
+        document.getElementById('visual-mode').style.display = mode === 'visual' ? 'block' : 'none';
+        document.getElementById('source-mode').style.display = mode === 'source' ? 'block' : 'none';
+        document.getElementById('btn-visual').classList.toggle('btn-primary', mode === 'visual');
+        document.getElementById('btn-source').classList.toggle('btn-primary', mode === 'source');
+        if (mode === 'source') updateSourceEditor();
+    };
+
+    // ==================== 全局刷新 ====================
+    function refreshAll() {
+        renderSites();
+        renderLives();
+        renderParses();
+        renderFlags();
+        renderIjk();
+        renderAds();
+        renderWallpaper();
+        renderSpider();
+        renderRecommend();
+        updateSourceEditor();
+        updateBadges();
+    }
+
+    function updateBadges() {
+        document.getElementById('sites-count').textContent = config.sites.length;
+        document.getElementById('parses-count').textContent = config.parses.length;
+        const liveCount = config.lives.reduce((s,g) => s + (g.channels? g.channels.length : 0), 0);
+        document.getElementById('lives-count').textContent = liveCount;
+    }
+
+    function updateSourceEditor() {
+        document.getElementById('source-editor').value = generateJSON();
+    }
+
+    // ==================== 点播源 ====================
+    function renderSites() {
+        const list = document.getElementById('sites-list');
+        if (!config.sites.length) {
+            list.innerHTML = '<div class="empty-state">暂无点播源</div>';
+            return;
+        }
+        list.innerHTML = config.sites.map((s,i) => `
+            <li class="${editSiteIdx === i ? 'selected' : ''}" onclick="editSite(${i})">
+                <div class="item-header"><span>${esc(s.name)}</span><span class="tag">Type ${s.type||1}</span></div>
+                <div class="text-sm text-muted">${esc((s.api||'').substring(0,50))}</div>
+            </li>`).join('');
+    }
+
+    window.addSite = function() {
+        editSiteIdx = -1;
+        document.getElementById('site-editor-card').style.display = 'block';
+        document.getElementById('site-editor-title').textContent = '添加点播源';
+        document.getElementById('btn-delete-site').style.display = 'none';
+        document.getElementById('site-key').value = '';
+        document.getElementById('site-name').value = '';
+        document.getElementById('site-api').value = '';
+        document.getElementById('site-playurl').value = '';
+        document.getElementById('site-ext').value = '';
+        document.getElementById('site-categories').value = '';
+        document.getElementById('site-type').value = '1';
+        document.getElementById('site-searchable').value = '1';
+        document.getElementById('site-quicksearch').value = '0';
+        renderSites();
+    };
+
+    window.editSite = function(i) {
+        editSiteIdx = i;
+        const s = config.sites[i];
+        document.getElementById('site-editor-card').style.display = 'block';
+        document.getElementById('site-editor-title').textContent = '编辑点播源';
+        document.getElementById('btn-delete-site').style.display = 'inline-flex';
+        document.getElementById('site-key').value = s.key || '';
+        document.getElementById('site-name').value = s.name || '';
+        document.getElementById('site-api').value = s.api || '';
+        document.getElementById('site-playurl').value = s.playUrl || '';
+        document.getElementById('site-ext').value = typeof s.ext === 'object' ? JSON.stringify(s.ext) : (s.ext || '');
+        document.getElementById('site-categories').value = Array.isArray(s.categories) ? s.categories.join(',') : (s.categories || '');
+        document.getElementById('site-type').value = s.type || 1;
+        document.getElementById('site-searchable').value = s.searchable || 1;
+        document.getElementById('site-quicksearch').value = s.quickSearch || 0;
+        renderSites();
+    };
+
+    window.saveSite = function() {
+        const key = document.getElementById('site-key').value.trim();
+        const name = document.getElementById('site-name').value.trim();
+        if (!key || !name) {
+            toast('⚠️ Key 和 Name 不能为空');
+            return;
+        }
+        const obj = {
+            key, name,
+            type: +document.getElementById('site-type').value,
+            api: document.getElementById('site-api').value.trim(),
+            searchable: +document.getElementById('site-searchable').value,
+            quickSearch: +document.getElementById('site-quicksearch').value,
+            filterable: 0,
+            playUrl: document.getElementById('site-playurl').value.trim(),
+            ext: (() => {
+                const raw = document.getElementById('site-ext').value.trim();
+                if (!raw) return '';
+                try { return JSON.parse(raw); } catch (e) { return raw; }
+            })(),
+            categories: document.getElementById('site-categories').value.split(',').map(s=>s.trim()).filter(Boolean)
+        };
+        if (editSiteIdx >= 0) config.sites[editSiteIdx] = obj;
+        else config.sites.push(obj);
+        editSiteIdx = -1;
+        document.getElementById('site-editor-card').style.display = 'none';
+        renderSites();
+        updateSourceEditor();
+        toast('✅ 点播源已保存');
+    };
+
+    window.cancelEditSite = function() {
+        editSiteIdx = -1;
+        document.getElementById('site-editor-card').style.display = 'none';
+        renderSites();
+    };
+
+    window.deleteSite = function() {
+        if (editSiteIdx >= 0 && confirm('确定删除此点播源？')) {
+            config.sites.splice(editSiteIdx, 1);
+            cancelEditSite();
+            updateSourceEditor();
+        }
+    };
+
+    // ==================== 直播源 ====================
+    function renderLives() {
+        const container = document.getElementById('lives-container');
+        if (!config.lives.length) {
+            container.innerHTML = '<div class="empty-state">暂无直播分组，请在上方输入名称并添加</div>';
+            return;
+        }
+        container.innerHTML = config.lives.map((g, gIdx) => {
+            const isEditing = editingGroupIdx === gIdx;
+            return `
+            <div class="group-item">
+                <div class="group-header">
+                    <div class="group-title">
+                        ${isEditing ? `<input id="group-edit-${gIdx}" value="${esc(g.group)}" onkeydown="if(event.key==='Enter')saveGroupName(${gIdx})" onblur="saveGroupName(${gIdx})">` : `📁 ${esc(g.group)}`}
+                        ${!isEditing ? `<button class="btn btn-sm" onclick="editGroupName(${gIdx})">✏️</button>` : ''}
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn btn-sm" onclick="addChannel(${gIdx})">＋频道</button>
+                        <button class="btn btn-sm btn-warning" onclick="deleteGroup(${gIdx})">🗑️</button>
+                    </div>
+                </div>
+                <div class="group-channels" style="padding-left:10px;">
+                    ${(g.channels || []).map((ch, cIdx) => {
+                        const urls = ch.urls || [''];
+                        return `
+                    <div class="channel-item">
+                        <input class="channel-name-input" value="${esc(ch.name)}" placeholder="频道名" onchange="updateChField(${gIdx},${cIdx},'name',this.value)">
+                        <div class="urls-container">
+                            ${urls.map((url, uIdx) => `
+                            <div class="url-row">
+                                <input style="flex:1;" value="${esc(url)}" placeholder="播放地址" onchange="updateChUrl(${gIdx},${cIdx},${uIdx},this.value)">
+                                <button class="btn btn-sm" onclick="removeChUrl(${gIdx},${cIdx},${uIdx})" ${urls.length <= 1 ? 'disabled' : ''}>✕</button>
+                            </div>`).join('')}
+                            <button class="btn btn-sm" onclick="addChUrl(${gIdx},${cIdx})">＋备用URL</button>
+                        </div>
+                        <button class="btn btn-sm btn-warning" onclick="deleteChannel(${gIdx},${cIdx})">删除</button>
+                    </div>`;
+                    }).join('')}
+                    ${(g.channels || []).length === 0 ? '<div class="empty-state">暂无频道</div>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    window.addLiveGroup = function() {
+        const inp = document.getElementById('new-group-name');
+        const name = inp.value.trim();
+        if (!name) {
+            toast('⚠️ 请输入分组名称');
+            return;
+        }
+        config.lives.push({ group: name, channels: [] });
+        inp.value = '';
+        renderLives();
+        updateSourceEditor();
+    };
+
+    window.editGroupName = function(idx) {
+        editingGroupIdx = idx;
+        renderLives();
+        setTimeout(() => {
+            const el = document.getElementById(`group-edit-${idx}`);
+            if (el) el.focus();
+        }, 30);
+    };
+
+    window.saveGroupName = function(idx) {
+        const el = document.getElementById(`group-edit-${idx}`);
+        if (el) {
+            const newName = el.value.trim();
+            if (newName) config.lives[idx].group = newName;
+        }
+        editingGroupIdx = -1;
+        renderLives();
+        updateSourceEditor();
+    };
+
+    window.deleteGroup = function(idx) {
+        if (confirm('确定删除整个分组吗？')) {
+            config.lives.splice(idx, 1);
+            renderLives();
+            updateSourceEditor();
+        }
+    };
+
+    window.addChannel = function(gIdx) {
+        config.lives[gIdx].channels.push({ name: '新频道', urls: [''] });
+        renderLives();
+        updateSourceEditor();
+    };
+
+    window.deleteChannel = function(gIdx, cIdx) {
+        config.lives[gIdx].channels.splice(cIdx, 1);
+        renderLives();
+        updateSourceEditor();
+    };
+
+    window.updateChField = function(gIdx, cIdx, key, val) {
+        config.lives[gIdx].channels[cIdx][key] = val;
+        updateSourceEditor();
+    };
+
+    window.updateChUrl = function(gIdx, cIdx, uIdx, val) {
+        const urls = config.lives[gIdx].channels[cIdx].urls;
+        if (urls) urls[uIdx] = val;
+        updateSourceEditor();
+    };
+
+    window.addChUrl = function(gIdx, cIdx) {
+        config.lives[gIdx].channels[cIdx].urls.push('');
+        renderLives();
+        updateSourceEditor();
+    };
+
+    window.removeChUrl = function(gIdx, cIdx, uIdx) {
+        const urls = config.lives[gIdx].channels[cIdx].urls;
+        if (urls && urls.length > 1) {
+            urls.splice(uIdx, 1);
+            renderLives();
+            updateSourceEditor();
+        }
+    };
+
+    // ==================== 解析地址 ====================
+    function renderParses() {
+        const list = document.getElementById('parses-list');
+        if (!config.parses.length) {
+            list.innerHTML = '<div class="empty-state">暂无解析</div>';
+            return;
+        }
+        list.innerHTML = config.parses.map((p,i) => `
+            <li class="${editParseIdx === i ? 'selected' : ''}" onclick="editParse(${i})">
+                <div class="item-header"><span>${esc(p.name)}</span><span class="tag">Type ${p.type||0}</span></div>
+                <div class="text-sm text-muted">${esc((p.url||'').substring(0,50))}</div>
+            </li>`).join('');
+    }
+
+    window.addParse = function() {
+        editParseIdx = -1;
+        document.getElementById('parse-editor-card').style.display = 'block';
+        document.getElementById('parse-editor-title').textContent = '添加解析';
+        document.getElementById('btn-delete-parse').style.display = 'none';
+        document.getElementById('parse-name').value = '';
+        document.getElementById('parse-url').value = '';
+        document.getElementById('parse-ext').value = '';
+        document.getElementById('parse-type').value = '0';
+        renderParses();
+    };
+
+    window.editParse = function(i) {
+        editParseIdx = i;
+        const p = config.parses[i];
+        document.getElementById('parse-editor-card').style.display = 'block';
+        document.getElementById('parse-editor-title').textContent = '编辑解析';
+        document.getElementById('btn-delete-parse').style.display = 'inline-flex';
+        document.getElementById('parse-name').value = p.name || '';
+        document.getElementById('parse-url').value = p.url || '';
+        document.getElementById('parse-ext').value = p.ext || '';
+        document.getElementById('parse-type').value = p.type || 0;
+        renderParses();
+    };
+
+    window.saveParse = function() {
+        const name = document.getElementById('parse-name').value.trim();
+        const url = document.getElementById('parse-url').value.trim();
+        if (!name || !url) {
+            toast('⚠️ Name 和 Url 不能为空');
+            return;
+        }
+        const obj = {
+            name,
+            type: +document.getElementById('parse-type').value,
+            url,
+            ext: document.getElementById('parse-ext').value.trim()
+        };
+        if (editParseIdx >= 0) config.parses[editParseIdx] = obj;
+        else config.parses.push(obj);
+        editParseIdx = -1;
+        document.getElementById('parse-editor-card').style.display = 'none';
+        renderParses();
+        updateSourceEditor();
+        toast('✅ 解析已保存');
+    };
+
+    window.cancelEditParse = function() {
+        editParseIdx = -1;
+        document.getElementById('parse-editor-card').style.display = 'none';
+        renderParses();
+    };
+
+    window.deleteParse = function() {
+        if (editParseIdx >= 0 && confirm('确定删除此解析？')) {
+            config.parses.splice(editParseIdx, 1);
+            cancelEditParse();
+            updateSourceEditor();
+        }
+    };
+
+    // ==================== 其他面板 ====================
+    function renderFlags() {
+        document.getElementById('flags-input').value = config.flags.join(',');
+    }
+    window.saveFlags = function() {
+        config.flags = document.getElementById('flags-input').value.split(',').map(s => s.trim()).filter(Boolean);
+        updateSourceEditor();
+        toast('✅ VIP解析标识已更新');
+    };
+
+    function renderIjk() {
+        ['soft','hard'].forEach(type => {
+            const container = document.getElementById(`ijk-${type}-fields`);
+            container.innerHTML = config.ijk[type].map((f, i) => `
+                <div class="form-row" style="margin-bottom:4px;align-items:center;">
+                    <div class="form-group" style="margin:0;"><input value="${esc(f.name)}" onchange="updateIjk('${type}',${i},'name',this.value)"></div>
+                    <div class="form-group" style="margin:0;"><input value="${esc(f.value)}" onchange="updateIjk('${type}',${i},'value',this.value)"></div>
+                    <div class="form-group" style="margin:0;min-width:70px;">
+                        <select onchange="updateIjk('${type}',${i},'category',+this.value)">
+                            <option value="1" ${(f.category||1)===1?'selected':''}>1</option>
+                            <option value="2" ${f.category===2?'selected':''}>2</option>
+                            <option value="3" ${f.category===3?'selected':''}>3</option>
+                            <option value="4" ${f.category===4?'selected':''}>4</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm" onclick="deleteIjk('${type}',${i})">✕</button>
+                </div>
+            `).join('');
+        });
+    }
+    window.updateIjk = function(type, idx, key, val) { config.ijk[type][idx][key] = val; updateSourceEditor(); };
+    window.addIjkField = function(type) { config.ijk[type].push({name:'new', value:'0', category:1}); renderIjk(); updateSourceEditor(); };
+    window.deleteIjk = function(type, idx) { config.ijk[type].splice(idx,1); renderIjk(); updateSourceEditor(); };
+
+    // 广告过滤
+    function renderAds() {
+        document.getElementById('ads-list').innerHTML = config.ads.map((a,i) => `
+            <li><div class="item-header"><span>${esc(a)}</span><button class="btn btn-sm" onclick="removeAd(${i})">✕</button></div></li>`).join('');
+    }
+    window.addAdDomain = function() {
+        const val = document.getElementById('ad-domain-input').value.trim();
+        if (val && !config.ads.includes(val)) {
+            config.ads.push(val);
+            document.getElementById('ad-domain-input').value = '';
+            renderAds();
+            updateSourceEditor();
+        }
+    };
+    window.removeAd = function(i) { config.ads.splice(i,1); renderAds(); updateSourceEditor(); };
+
+    function renderRules() {
+        document.getElementById('rules-list').innerHTML = config.rules.map((r,i) => `
+            <li>
+                <div class="item-header"><span>${esc(r.name)}</span><button class="btn btn-sm" onclick="removeRule(${i})">✕</button></div>
+                <div class="text-sm text-muted">Hosts: ${(r.hosts||[]).join(', ')} | Regex: ${(r.regex||[]).join(', ')}</div>
+            </li>`).join('');
+    }
+    window.startAddRule = function() {
+        if (ruleAdding) return;
+        ruleAdding = true;
+        const div = document.createElement('div');
+        div.className = 'inline-rule-editor';
+        div.id = 'inline-rule';
+        div.innerHTML = `
+            <div class="form-row">
+                <div class="form-group"><label>名称</label><input id="nr-name"></div>
+                <div class="form-group"><label>域名(逗号分隔)</label><input id="nr-hosts"></div>
+                <div class="form-group"><label>正则(逗号分隔)</label><input id="nr-regex"></div>
+            </div>
+            <div class="mt-2">
+                <button class="btn btn-success btn-sm" onclick="saveNewRule()">保存</button>
+                <button class="btn btn-sm" onclick="cancelNewRule()">取消</button>
+            </div>`;
+        document.getElementById('rules-list').after(div);
+    };
+    window.saveNewRule = function() {
+        const name = document.getElementById('nr-name').value.trim();
+        if (!name) { toast('⚠️ 规则名称不能为空'); return; }
+        const hosts = document.getElementById('nr-hosts').value.split(',').map(s => s.trim()).filter(Boolean);
+        const regex = document.getElementById('nr-regex').value.split(',').map(s => s.trim()).filter(Boolean);
+        config.rules.push({ name, hosts, regex });
+        ruleAdding = false;
+        const editor = document.getElementById('inline-rule');
+        if (editor) editor.remove();
+        renderRules();
+        updateSourceEditor();
+    };
+    window.cancelNewRule = function() {
+        ruleAdding = false;
+        const editor = document.getElementById('inline-rule');
+        if (editor) editor.remove();
+    };
+    window.removeRule = function(i) { config.rules.splice(i,1); renderRules(); updateSourceEditor(); };
+    window.resetAdsToDefault = function() {
+        config.ads = DEFAULT.ads.slice();
+        config.rules = DEFAULT.rules.map(r => ({name:r.name, hosts:r.hosts.slice(), regex:r.regex.slice()}));
+        renderAds(); renderRules(); updateSourceEditor();
+        toast('🔄 已重置为默认规则');
+    };
+
+    function renderWallpaper() { document.getElementById('wallpaper-url').value = config.wallpaper || ''; }
+    window.saveWallpaper = function() { config.wallpaper = document.getElementById('wallpaper-url').value.trim(); updateSourceEditor(); toast('✅ 壁纸已保存'); };
+
+    function renderSpider() { document.getElementById('spider-jar').value = config.spider || ''; }
+    window.saveSpider = function() { config.spider = document.getElementById('spider-jar').value.trim(); updateSourceEditor(); toast('✅ 爬虫配置已保存'); };
+
+    // 推荐接口
+    function renderRecommend() {
+        document.getElementById('recommend-sites-list').innerHTML = RECOMMEND_SITES.map((s,i) => `
+            <li>
+                <div class="item-header"><span>${esc(s.name)}</span><button class="btn btn-accent btn-sm" onclick="importRecSite(${i})">导入</button></div>
+                <div class="text-sm text-muted">${esc(s.api)}</div>
+            </li>`).join('');
+        document.getElementById('recommend-lives-list').innerHTML = RECOMMEND_LIVES.map((g,i) => `
+            <li>
+                <div class="item-header"><span>${esc(g.group)}</span><button class="btn btn-accent btn-sm" onclick="importRecLive(${i})">导入</button></div>
+                <div class="text-sm text-muted">${g.channels.length}个频道</div>
+            </li>`).join('');
+    }
+    window.importRecSite = function(i) {
+        const s = RECOMMEND_SITES[i];
+        if (config.sites.some(x => x.key === s.key)) {
+            toast('⚠️ 该点播源已存在');
+            return;
+        }
+        config.sites.push({...s, categories:[], ext:'', quickSearch:0, filterable:0, playUrl:''});
+        renderSites(); updateSourceEditor(); toast('✅ 已导入 ' + s.name);
+    };
+    window.importRecLive = function(i) {
+        const clone = JSON.parse(JSON.stringify(RECOMMEND_LIVES[i]));
+        clone.channels.forEach(c => { if (!c.urls) c.urls = ['']; });
+        config.lives.push(clone);
+        renderLives(); updateSourceEditor(); toast('✅ 已导入直播分组');
+    };
+
+    // 源码模式操作
+    window.applySource = function() {
+        try {
+            const parsed = JSON.parse(document.getElementById('source-editor').value);
+            config = deepMerge(JSON.parse(JSON.stringify(DEFAULT)), parsed);
+            refreshAll();
+            toast('✅ 源码已应用');
+        } catch (e) {
+            toast('❌ JSON 格式错误，请检查');
+        }
+    };
+
+    window.formatSource = function() {
+        try {
+            const obj = JSON.parse(document.getElementById('source-editor').value);
+            document.getElementById('source-editor').value = JSON.stringify(obj, null, 2);
+        } catch (e) {
+            toast('❌ 无法格式化，JSON 无效');
+        }
+    };
+
+    // Tab 切换
+    document.getElementById('config-tabs').addEventListener('click', function(e) {
+        const tab = e.target.closest('.tab');
+        if (!tab) return;
+        document.querySelectorAll('#config-tabs .tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        const panel = document.getElementById(tab.dataset.panel);
+        if (panel) panel.classList.add('active');
+    });
+
+    // 启动
+    loadConfig();
+    refreshAll();
+</script>
 </body>
 </html>
