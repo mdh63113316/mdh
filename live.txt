@@ -1,35 +1,10 @@
-#EXTM3U x-tvg-url="https://11.112114.xyz/pp.xml"
-#EXTINF:-1 tvg-id="少年包青天美黑之旅" tvg-name="少年包青天美黑之旅" tvg-logo="https://11.112114.xyz/logo/少年包青天美黑之旅.png" group-title="其他",少年包青天美黑之旅
-https://live.ottiptv.cc/yy/1354936141
-#EXTINF:-1 tvg-id="少年包青天美黑之旅" tvg-name="少年包青天美黑之旅" tvg-logo="https://11.112114.xyz/logo/少年包青天美黑之旅.png" group-title="其他",少年包青天美黑之旅
-https://t.freetv.fun/live/shao-nian-bao-qing-tian-mei-hei-zhi-lu.m3u8
-#EXTINF:-1 tvg-id="少年包青天1~3蓝光版" tvg-name="少年包青天1~3蓝光版" tvg-logo="https://11.112114.xyz/logo/少年包青天1~3蓝光版.png" group-title="其他",少年包青天1~3蓝光版
-https://www.goodiptv.club/yy/38498680
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://t.freetv.fun/live/shao-nian-bao-qing-tian-di-san-bu.m3u8
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://t.freetv.fun/live/shao-nian-bao-qing-tian-di-san-bu-1.m3u8
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://live.ottiptv.cc/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://live.ottiptv.cc/yy/1382851540
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-http://1.94.31.214:35455/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-http://alist.xicp.fun:35455/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://www.goodiptv.club/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://www.goodiptv.club/yy/61318527
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://www.goodiptv.club/yy/1382851540
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-http://alist.xicp.fun:35455/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-https://live.ottiptv.cc/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第三部" tvg-name="少年包青天第三部" tvg-logo="https://11.112114.xyz/logo/少年包青天第三部.png" group-title="其他",少年包青天第三部
-http://1.94.31.214:35455/yy/1382736814
-#EXTINF:-1 tvg-id="少年包青天第一部" tvg-name="少年包青天第一部" tvg-logo="https://11.112114.xyz/logo/少年包青天第一部.png" group-title="其他",少年包青天第一部
-https://www.goodiptv.club/yy/1356043677
-#EXTINF:-1 tvg-id="少年包青天第一部" tvg-name="少年包青天第一部" tvg-logo="https://11.112114.xyz/logo/少年包青天第一部.png" group-title="其他",少年包青天第一部
-https://live.ottiptv.cc/yy/1356043677
+其他,#genre#
+少年包青天第一部,https://www.goodiptv.club/yy/1356043677
+少年包青天第一部,https://live.ottiptv.cc/yy/1356043677
+少年包青天第三部,https://live.ottiptv.cc/yy/1382736814
+少年包青天第三部,https://live.ottiptv.cc/yy/1382851540
+少年包青天第三部,https://www.goodiptv.club/yy/1382736814
+少年包青天第三部,https://www.goodiptv.club/yy/1382851540
+少年包青天第三部,http://alist.xicp.fun:35455/yy/1382736814
+少年包青天第三部,https://live.ottiptv.cc/yy/1382736814
+少年包青天第三部,http://1.94.31.214:35455/yy/1382736814
