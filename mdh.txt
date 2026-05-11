@@ -77,6 +77,61 @@
           ]
         }
       ]
+    },
+    {
+      "group": "电视剧",
+      "channels": [
+        {
+          "name": "士兵突击",
+          "urls": [
+            "http://cfss.cc/cdn/hy/11342430.m3u8",
+            "https://t.freetv.fun/live/shi-bing-tu-ji.m3u8",
+            "https://t.alcy.cc/shi-bing-tu-ji.m3u8",
+            "https://t.alcy.cc/shi-bing-tu-ji-2.m3u8",
+            "https://t.alcy.cc/shi-bing-tu-ji-3.m3u8"
+          ]
+        },
+        {
+          "name": "亮剑",
+          "urls": [
+            "http://cfss.cc/cdn/hy/11342431.m3u8",
+            "https://t.freetv.fun/live/liang-jian.m3u8",
+            "https://t.alcy.cc/liang-jian.m3u8",
+            "https://t.alcy.cc/liang-jian-2.m3u8",
+            "https://t.alcy.cc/liang-jian-3.m3u8"
+          ]
+        },
+        {
+          "name": "西游记",
+          "urls": [
+            "http://cfss.cc/cdn/hy/11342432.m3u8",
+            "https://t.freetv.fun/live/xi-you-ji.m3u8",
+            "https://t.alcy.cc/xi-you-ji.m3u8",
+            "https://t.alcy.cc/xi-you-ji-2.m3u8",
+            "https://t.alcy.cc/xi-you-ji-3.m3u8"
+          ]
+        },
+        {
+          "name": "新白娘子传奇",
+          "urls": [
+            "http://cfss.cc/cdn/hy/11342433.m3u8",
+            "https://t.freetv.fun/live/xin-bai-niang-zi-chuan-qi.m3u8",
+            "https://t.alcy.cc/xin-bai-niang-zi-chuan-qi.m3u8",
+            "https://t.alcy.cc/xin-bai-niang-zi-chuan-qi-2.m3u8",
+            "https://t.alcy.cc/xin-bai-niang-zi-chuan-qi-3.m3u8"
+          ]
+        },
+        {
+          "name": "还珠格格",
+          "urls": [
+            "http://cfss.cc/cdn/hy/11342434.m3u8",
+            "https://t.freetv.fun/live/huan-zhu-ge-ge.m3u8",
+            "https://t.alcy.cc/huan-zhu-ge-ge.m3u8",
+            "https://t.alcy.cc/huan-zhu-ge-ge-2.m3u8",
+            "https://t.alcy.cc/huan-zhu-ge-ge-3.m3u8"
+          ]
+        }
+      ]
     }
   ],
   "flags": [
