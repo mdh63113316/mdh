@@ -32,45 +32,24 @@
   ],
   "sites": [
     {
-      "key": "csp_RuYi",
+      "key": "如意影视",
       "name": "如意影视",
       "type": 1,
       "api": "https://cj.rycjapi.com/api.php/provide/vod",
       "searchable": 1
     },
     {
-      "key": "csp_JiSu",
+      "key": "极速影视",
       "name": "极速影视",
       "type": 1,
       "api": "https://jszyapi.com/api.php/provide/vod",
       "searchable": 1
     },
     {
-      "key": "csp_MoDu",
+      "key": "魔都影视",
       "name": "魔都影视",
       "type": 1,
       "api": "https://www.mdzyapi.com/api.php/provide/vod",
-      "searchable": 1
-    },
-    {
-      "key": "csp_JiJu",
-      "name": "吉剧影视",
-      "type": 1,
-      "api": "https://cj.jijuapi.com/api.php/provide/vod",
-      "searchable": 1
-    },
-    {
-      "key": "csp_LianJu",
-      "name": "恋剧影视",
-      "type": 1,
-      "api": "https://cj.lianjuapi.com/api.php/provide/vod",
-      "searchable": 1
-    },
-    {
-      "key": "csp_HaoJu",
-      "name": "好剧影视",
-      "type": 1,
-      "api": "https://cj.haojuapi.com/api.php/provide/vod",
       "searchable": 1
     }
   ],
@@ -166,6 +145,101 @@
           "name": "CCTV-15 音乐",
           "urls": [
             "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001049/index.m3u8"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "卫视",
+      "channels": [
+        {
+          "name": "湖南卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001175/index.m3u8"
+          ]
+        },
+        {
+          "name": "浙江卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001176/index.m3u8"
+          ]
+        },
+        {
+          "name": "江苏卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001177/index.m3u8"
+          ]
+        },
+        {
+          "name": "东方卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001178/index.m3u8"
+          ]
+        },
+        {
+          "name": "北京卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001179/index.m3u8"
+          ]
+        },
+        {
+          "name": "深圳卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001180/index.m3u8"
+          ]
+        },
+        {
+          "name": "东方卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001181/index.m3u8"
+          ]
+        },
+        {
+          "name": "天津卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001182/index.m3u8"
+          ]
+        },
+        {
+          "name": "安徽卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001183/index.m3u8"
+          ]
+        },
+        {
+          "name": "广东卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001184/index.m3u8"
+          ]
+        },
+        {
+          "name": "四川卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001185/index.m3u8"
+          ]
+        },
+        {
+          "name": "陕西卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001186/index.m3u8"
+          ]
+        },
+        {
+          "name": "重庆卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001187/index.m3u8"
+          ]
+        },
+        {
+          "name": "江西卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001188/index.m3u8"
+          ]
+        },
+        {
+          "name": "广西卫视",
+          "urls": [
+            "http://[2409:8087:1e03:21::2]:6060/cms001/ch00000090990000001189/index.m3u8"
           ]
         }
       ]
