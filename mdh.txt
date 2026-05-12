@@ -52,8 +52,14 @@
       "api": "https://www.mdzyapi.com/api.php/provide/vod",
       "searchable": 1
     },
-   
-{
+   {
+      "key": 热影视",
+      "name": "🍓热 ｜ 影视",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/rebo.js",
+      "searchable": 1
+    },
+   {
       "key": "YL影视",
       "name": "🍓YL ｜ 影视",
       "type": 3,
