@@ -46,20 +46,6 @@
       "searchable": 1
     },
     {
-      "key": "梁哥影视",
-      "name": "梁哥 | 影视",
-      "type": 3,
-      "api": "https://mdh.dpdns.org/js/ylys.js",
-      "searchable": 1
-    },
-  {
-      "key": "梁哥别人",
-      "name": "梁哥别人 | 影视",
-      "type": 3,
-      "api": "https://mdh.dpdns.org/js/1.js",
-      "searchable": 1
-    },
-    {
       "key": "魔都影视",
       "name": "🐂魔都 | 影视",
       "type": 1,
