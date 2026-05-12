@@ -31,13 +31,6 @@
     }
   ],
   "sites": [
-   {
-      "key": "梁哥影视",
-      "name": "梁哥影视",
-      "type": 3,
-      "api": "https://mdh.dpdns.org/js/ylys.js",
-      "searchable": 1
-    },
     {
       "key": "如意影视",
       "name": "如意影视",
