@@ -1,33 +1,91 @@
-var rule = {
-    title: '永乐视频',
-    host: 'https://www.ylys.tv',
-    homeUrl: '/',
-    // 分类列表（从首页顶部菜单解析）
-    class_parse: '.nav-menu li:gt(0) a',
-    // 推荐列表页
-    home_parse: '.module-item',
-    // 列表页公用解析规则
-    list_parse: '.module-item',
-    // 视频详情页解析
-    detail_parse: '.module-info',
-    // 搜索入口
-    searchUrl: '/vodsearch/-------------/.html?wd=**',
-    
-    // 提取器
-    ids: '/voddetail/(\\d+).html',
-    titles: '.module-info-title h1@text',
-    imgs: '.module-info-pic img@data-original',
-    contents: '.module-info-content@text',
-    play_parse: true,
-    play_list: '.module-play-list a',
-    play_url: 'href',
-    play_title: 'span@text',
-    
-    // 全局请求头
-    headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 5.0; SM-G900P) AppleWebKit/537.36'
-    }
-};
+// 终极兼容版 - 纯函数式，无任何现代语法
+var HOST = 'https://www.ylys.tv';
+var HEADERS = {"User-Agent": "Mozilla/5.0"};
 
-// 直接返回 rule 对象（TVBox 标准）
-rule;
+function init() { return JSON.stringify({}); }
+function home() {
+    return JSON.stringify({
+        class: [
+            {type_id:1, type_name:"电影"},
+            {type_id:2, type_name:"电视剧"},
+            {type_id:3, type_name:"综艺"},
+            {type_id:4, type_name:"动漫"}
+        ],
+        filters: {}
+    });
+}
+function homeVod() {
+    var html = request(HOST, {headers:HEADERS}).content;
+    var list = [];
+    var items = html.match(/<a[^>]+href="\/voddetail\/(\d+)\.html[^>]*>[\s\S]*?<img[^>]+src="([^"]+)"/gi);
+    if (items) {
+        for (var i=0; i<items.length && i<20; i++) {
+            var id = items[i].match(/\/voddetail\/(\d+)/);
+            var pic = items[i].match(/src="([^"]+)"/);
+            if (id) list.push({
+                vod_id: id[1],
+                vod_name: "视频" + i,
+                vod_pic: pic ? pic[1] : ''
+            });
+        }
+    }
+    return JSON.stringify({list: list});
+}
+function category(tid, pg) {
+    var url = HOST + '/vodtype/' + tid + (pg>1?'/page/'+pg:'');
+    var html = request(url, {headers:HEADERS}).content;
+    var list = [];
+    var items = html.match(/<a[^>]+href="\/voddetail\/(\d+)\.html[^>]*>[\s\S]*?<img[^>]+src="([^"]+)"/gi);
+    if (items) {
+        for (var i=0; i<items.length; i++) {
+            var id = items[i].match(/\/voddetail\/(\d+)/);
+            var pic = items[i].match(/src="([^"]+)"/);
+            if (id) list.push({
+                vod_id: id[1],
+                vod_name: "视频"+id[1],
+                vod_pic: pic?pic[1]:''
+            });
+        }
+    }
+    return JSON.stringify({list: list, page: pg});
+}
+function detail(id) {
+    var url = HOST + '/voddetail/' + id + '.html';
+    var html = request(url, {headers:HEADERS}).content;
+    var name = (html.match(/<h1>([^<]+)<\/h1>/) || ['',''])[1];
+    var pic = (html.match(/data-original="([^"]+)"/) || ['',''])[1];
+    var content = (html.match(/<div class="content">([\s\S]*?)<\/div>/) || ['',''])[1];
+    return JSON.stringify({
+        list: [{
+            vod_id: id,
+            vod_name: name,
+            vod_pic: pic,
+            vod_content: content,
+            vod_play_from: '默认',
+            vod_play_url: '1$'+id
+        }]
+    });
+}
+function search(wd) {
+    var url = HOST + '/vodsearch/' + encodeURIComponent(wd) + '.html';
+    var html = request(url, {headers:HEADERS}).content;
+    var list = [];
+    var items = html.match(/<a[^>]+href="\/voddetail\/(\d+)\.html[^>]*>([^<]+)<\/a>/gi);
+    if (items) {
+        for (var i=0; i<items.length; i++) {
+            var id = items[i].match(/\/voddetail\/(\d+)/);
+            var name = items[i].match(/>([^<]+)</);
+            if (id) list.push({vod_id:id[1], vod_name:name?name[1]:''});
+        }
+    }
+    return JSON.stringify({list: list});
+}
+function play(flag, id) {
+    var url = HOST + '/play/' + id + '.html';
+    var html = request(url, {headers:HEADERS}).content;
+    var m3u8 = html.match(/url:\s*['"]([^'"]+\.m3u8)['"]/);
+    if (m3u8) return JSON.stringify({parse:0, url:m3u8[1]});
+    return JSON.stringify({parse:1, url:url});
+}
+
+return {init,home,homeVod,category,detail,search,play};
