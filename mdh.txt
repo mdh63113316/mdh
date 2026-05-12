@@ -53,10 +53,10 @@
       "searchable": 1
     },
     {
-      "key": "魔",
-      "name": "魔都",
+      "key": "好好看影视",
+      "name": "🍓好好看 ｜ 影视",
       "type": 3,
-      "api": "https://mdh.dpdns.org/js/ylys.js",
+      "api": "https://mdh.dpdns.org/js/hhkan.js",
       "searchable": 1
     },
     {
