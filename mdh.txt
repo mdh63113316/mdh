@@ -37,6 +37,19 @@
       "type": 1,
       "api": "https://cj.rycjapi.com/api.php/provide/vod",
       "searchable": 1
+    },{
+      "key": "光棍影视",
+      "name": "🍓光棍 ｜ 影视",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/ggys.js",
+      "searchable": 1
+    },
+    {
+      "key": "热播影视",
+      "name": "🍓热播 ｜ 影视",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/rebo.js",
+      "searchable": 1
     },
     {
       "key": "速播影视",
