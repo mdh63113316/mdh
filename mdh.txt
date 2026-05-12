@@ -53,6 +53,13 @@
       "searchable": 1
     },
     {
+      "key": "魔",
+      "name": "魔都",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/ylys.js",
+      "searchable": 1
+    },
+    {
       "key": "橘皮",
       "name": "💡橘皮｜影视",
       "type": 3,
