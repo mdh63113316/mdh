@@ -1,4 +1,4 @@
-let host = 'https://www.hhkan1.com';
+let host = 'https://www.hhkan0.com';
 let headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     "Referer": host + "/"
