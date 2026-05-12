@@ -46,13 +46,19 @@
       "searchable": 1
     },
     {
+      "key": "梁哥影视",
+      "name": "梁哥 | 影视",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/ylys.js",
+      "searchable": 1
+    },
+    {
       "key": "魔都影视",
       "name": "🐂魔都 | 影视",
       "type": 1,
       "api": "https://www.mdzyapi.com/api.php/provide/vod",
       "searchable": 1
     },
-
     {
       "key": "橘皮",
       "name": "💡橘皮｜影视",
