@@ -1,7 +1,3 @@
-// 永乐视频（ylys.tv）TVBox JS 爬虫 - 适配安卓4设备
-// 脚本采用同步 `request`，避免 `async/await` 和箭头函数，确保兼容性
-// 基于网站：https://www.ylys.tv
-
 // 站点基础信息
 var host = 'https://www.ylys.tv';
 var headers = {
