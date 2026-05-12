@@ -32,6 +32,12 @@
   ],
   "sites": [
     {
+      "key": "梁哥",
+      "name": "🥇梁哥｜影视",
+      "type": 3,
+      "api": "https://gh-proxy.org/https://github.com/mdh63113316/mdh/blob/main/js/ylys.js"
+    },
+    {
       "key": "如意影视",
       "name": "如意影视",
       "type": 1,
