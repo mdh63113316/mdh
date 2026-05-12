@@ -59,6 +59,13 @@
       "api": "https://mdh.dpdns.org/js/hhkan.js",
       "searchable": 1
     },
+{
+      "key": "YL影视",
+      "name": "🍓YL ｜ 影视",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/ylys.js",
+      "searchable": 1
+    },
     {
       "key": "橘皮",
       "name": "💡橘皮｜影视",
