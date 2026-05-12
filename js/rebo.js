@@ -1,8 +1,7 @@
-// 通用苹果CMS V10 TVBox 爬虫
-// 适用于大多数苹果 CMS 架构的影视站
-// 使用方法：修改下方 host 变量为目标网站地址即可
+// 热播影视网 TVBox 爬虫 - 专为 acsux.cn 优化
+// 兼容安卓4设备，基于苹果CMS mxtheme 模板
 
-var host = 'https://acsux.cn';   // 这里换成你想要采集的网站地址（不要带末尾斜杠）
+var host = 'https://acsux.cn';
 var headers = {
     "User-Agent": "Mozilla/5.0 (Linux; Android 5.0; SM-G900P) AppleWebKit/537.36",
     "Referer": host + "/"
@@ -14,40 +13,32 @@ function fetchUrl(url) {
     return result ? result.content : '';
 }
 
-// 解析视频列表（适用于苹果CMS标准模板）
+// --- 修正视频列表解析函数 ---
+// 现在直接匹配网站的实际结构：<a class="module-poster-item module-item" href="链接">
 function getList(html) {
     var videos = [];
-    // 匹配视频卡片（支持 .module-item 和 .fed-list-item）
-    var items = html.match(/<div[^>]*class="[^"]*(?:module-item|fed-list-item)[^"]*"[^>]*>[\s\S]*?<\/div>/gi);
-    if (!items || items.length === 0) {
-        // 备用匹配：直接找 a 标签包裹的卡片
-        items = html.match(/<a[^>]*class="[^"]*module-poster[^"]*"[^>]*>[\s\S]*?<\/a>/gi);
-    }
+    // 关键修正：匹配 .module-items 容器下的每一个 .module-poster-item
+    var items = html.match(/<a[^>]*class="module-poster-item module-item"[^>]*href="\/dt\/(\d+)\.html"[^>]*>[\s\S]*?<\/a>/gi);
     if (!items) return videos;
 
     for (var i = 0; i < items.length && i < 40; i++) {
         var it = items[i];
-        // 提取详情页链接和ID
-        var idMatch = it.match(/href="\/(?:vod|detail|show)\/(\d+)\.html/) ||
-                      it.match(/href="\/(?:index\.php\/)?vod\/detail\/id\/(\d+)\.html/) ||
-                      it.match(/\/detail\/(\d+)/);
+        // 提取详情页链接中的ID
+        var idMatch = it.match(/href="\/dt\/(\d+)\.html/);
         if (!idMatch) continue;
         var vod_id = idMatch[1];
 
         // 提取标题
-        var nameMatch = it.match(/title="([^"]+)"/) ||
-                        it.match(/alt="([^"]+)"/) ||
-                        it.match(/<strong>([^<]+)<\/strong>/);
+        var nameMatch = it.match(/title="([^"]+)"/);
         var vod_name = nameMatch ? nameMatch[1] : '';
 
         // 提取封面图
-        var picMatch = it.match(/data-original="([^"]+)"/) ||
-                       it.match(/src="([^"]+)"/);
-        var vod_pic = picMatch ? (picMatch[1].startsWith('http') ? picMatch[1] : host + picMatch[1]) : '';
+        var picMatch = it.match(/data-original="([^"]+)"/);
+        var vod_pic = picMatch ? picMatch[1] : '';
+        if (vod_pic && !/^https?:\/\//i.test(vod_pic)) vod_pic = host + vod_pic;
 
         // 提取备注（集数/状态）
-        var remarkMatch = it.match(/module-item-note">([^<]+)<\/div>/) ||
-                          it.match(/remarks">([^<]+)<\/span>/);
+        var remarkMatch = it.match(/<div class="module-item-note">([^<]+)<\/div>/);
         var vod_remarks = remarkMatch ? remarkMatch[1] : '';
 
         if (vod_id && vod_name) {
@@ -84,76 +75,73 @@ function homeVod() {
 function category(tid, pg, filter, extend) {
     var page = pg || 1;
     var targetId = (extend && extend.class) ? extend.class : tid;
-    // 苹果CMS常用分类URL格式：/vodtype/1/ 或 /vod/show/id/1/page/2.html
-    var url = host + "/vodtype/" + targetId + (page > 1 ? "/page/" + page + "/" : "");
-    var html = fetchUrl(url);
-    // 如果上面返回空，尝试另一种格式
-    if (!html || html.length < 100) {
-        url = host + "/vod/show/id/" + targetId + (page > 1 ? "/page/" + page + ".html" : "");
-        html = fetchUrl(url);
+    // 分类页 URL 格式: /channel/{tid}.html
+    var url = host + "/channel/" + targetId + ".html";
+    if (page > 1) {
+        url = host + "/channel/" + targetId + "-" + page + ".html";
     }
+    var html = fetchUrl(url);
     var list = getList(html);
     return JSON.stringify({ "list": list, "page": page });
 }
 
 function detail(id) {
-    var url = host + "/voddetail/" + id + ".html";
+    var url = host + "/dt/" + id + ".html";
     var html = fetchUrl(url);
-    if (!html || html.length === 0) {
-        url = host + "/index.php/vod/detail/id/" + id + ".html";
-        html = fetchUrl(url);
-    }
 
-    // 标题
+    // 提取标题
     var nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
     var vod_name = nameMatch ? nameMatch[1] : '';
 
-    // 封面
+    // 提取封面
     var picMatch = html.match(/data-original="([^"]+)"/);
-    var vod_pic = picMatch ? (picMatch[1].startsWith('http') ? picMatch[1] : host + picMatch[1]) : '';
+    var vod_pic = picMatch ? picMatch[1] : '';
 
-    // 简介
-    var contentMatch = html.match(/<div[^>]*class="[^"]*video-info[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
-                       html.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    // 提取简介
+    var contentMatch = html.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
     var vod_content = contentMatch ? contentMatch[1].replace(/<[^>]+>/g, '') : '';
 
-    // 播放线路名称
+    // --- 修正播放列表解析：匹配网站实际的播放列表结构 ---
     var playFrom = [];
-    var tabMatches = html.match(/<div[^>]*class="[^"]*module-tab-item[^"]*"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/gi);
-    if (tabMatches) {
-        for (var i = 0; i < tabMatches.length; i++) {
-            var spanMatch = tabMatches[i].match(/<span>([^<]+)<\/span>/);
+    var playUrlPart = [];
+
+    // 1. 获取所有播放线路
+    var playTabItems = html.match(/<div class="module-tab-item"[^>]*>[\s\S]*?<span>(.*?)<\/span>[\s\S]*?<\/div>/gi);
+    if (playTabItems) {
+        for (var i = 0; i < playTabItems.length; i++) {
+            var spanMatch = playTabItems[i].match(/<span>(.*?)<\/span>/);
             if (spanMatch) playFrom.push(spanMatch[1]);
         }
     }
     if (playFrom.length === 0) playFrom.push("默认线路");
 
-    // 播放地址列表
-    var playUrl = [];
-    var playBlocks = html.match(/<div[^>]*class="[^"]*module-play-list[^"]*"[^>]*>[\s\S]*?<\/div>/gi);
-    if (playBlocks) {
-        for (var j = 0; j < playBlocks.length && j < playFrom.length; j++) {
-            var block = playBlocks[j];
-            var links = block.match(/<a[^>]*href="\/(?:play|vodplay)\/([^"]+)"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/gi);
+    // 2. 获取每个线路下的播放列表
+    var playListBlocks = html.match(/<div[^>]*class="module-play-list-content"[^>]*>[\s\S]*?<\/div>/gi);
+    if (playListBlocks) {
+        for (var j = 0; j < playListBlocks.length && j < playFrom.length; j++) {
+            var block = playListBlocks[j];
             var eps = [];
+            // 匹配每个剧集链接
+            var links = block.match(/<a[^>]*href="\/play\/(\d+)\.html"[^>]*>[\s\S]*?<span>(.*?)<\/span>[\s\S]*?<\/a>/gi);
             if (links) {
                 for (var k = links.length - 1; k >= 0; k--) {
-                    var hrefMatch = links[k].match(/href="\/(?:play|vodplay)\/([^"]+)"/);
-                    var spanMatch2 = links[k].match(/<span>([^<]+)<\/span>/);
-                    if (hrefMatch) {
-                        var name = spanMatch2 ? spanMatch2[1] : (k+1);
-                        eps.push(name + '$' + hrefMatch[1]);
+                    var link = links[k];
+                    var urlMatch = link.match(/href="\/play\/(\d+)\.html"/);
+                    var nameMatch = link.match(/<span>(.*?)<\/span>/);
+                    if (urlMatch) {
+                        var name = nameMatch ? nameMatch[1] : (k+1);
+                        eps.push(name + '$' + urlMatch[1]);
                     }
                 }
-                playUrl.push(eps.join('#'));
+                playUrlPart.push(eps.join('#'));
             } else {
-                playUrl.push('');
+                playUrlPart.push('');
             }
         }
     }
 
     var vod_play_from = playFrom.join('$$$');
-    var vod_play_url = playUrl.join('$$$');
+    var vod_play_url = playUrlPart.join('$$$');
 
     return JSON.stringify({
         list: [{
@@ -169,7 +157,8 @@ function detail(id) {
 
 function search(wd, pg) {
     var page = pg || 1;
-    var url = host + "/vodsearch/" + encodeURIComponent(wd) + "-------------/" + (page > 1 ? "page/" + page + "/" : "");
+    var url = host + "/search/" + encodeURIComponent(wd) + "-------------.html";
+    if (page > 1) url = host + "/search/" + encodeURIComponent(wd) + "-------------" + page + "-------------/" + page;
     var html = fetchUrl(url);
     var list = getList(html);
     return JSON.stringify({ "list": list });
