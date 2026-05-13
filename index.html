@@ -244,10 +244,10 @@
     };
 
     const RECOMMEND_SITES = [
-        { key:'如意影视', name:'如意 | 影视', type:1, api:'https://cj.rycjapi.com/api.php/provide/vod', searchable:1, playurl:'https://ruyiplayer.com?url=' },
-        { key:'速播影视', name:'速播 | 影视', type:1, api:'https://subocj.com/api.php/provide/vod', searchable:1, playurl:'https://subojiexi.com/play/?url=' },
-        { key:'魔都影视', name:'魔都 | 影视', type:1, api:'https://www.mdzyapi.com/api.php/provide/vod', searchable:1, playurl:'https://www.modujiexi66.com/?url='},
-        { key:'无水印影视', name:'无水印 | 影视', type:1, api:'https://api.wsyzy.net/api.php/provide/vod/?ac=list', searchable:1, playurl:'https://wsyzy.top/m3u8/?url='}
+        { key:'如意影视', name:'如意 | 影视', type:1, api:'https://cj.rycjapi.com/api.php/provide/vod', searchable:1, playUrl:'https://ruyiplayer.com?url=' },
+        { key:'速播影视', name:'速播 | 影视', type:1, api:'https://subocj.com/api.php/provide/vod', searchable:1, playUrl:'https://subojiexi.com/play/?url=' },
+        { key:'魔都影视', name:'魔都 | 影视', type:1, api:'https://www.mdzyapi.com/api.php/provide/vod', searchable:1, playUrl:'https://www.modujiexi66.com/?url='},
+        { key:'无水印影视', name:'无水印 | 影视', type:1, api:'https://api.wsyzy.net/api.php/provide/vod/?ac=list', searchable:1, playUrl:'https://wsyzy.top/m3u8/?url='}
     ];
 
     const RECOMMEND_LIVES = [
@@ -833,7 +833,7 @@
             toast('⚠️ 该点播源已存在');
             return;
         }
-        config.sites.push({...s, categories:[], ext:'', quickSearch:0, filterable:0, playUrl:''});
+        config.sites.push({...s, categories:[], ext:'', quickSearch:0, filterable:0});
         renderSites(); updateSourceEditor(); toast('✅ 已导入 ' + s.name);
     };
     window.importRecLive = function(i) {
