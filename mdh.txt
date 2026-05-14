@@ -46,8 +46,8 @@
       "ext": "7lj763gg402i7942463j9j9jh84l8798l8gli652828g332i"
     },
     {
-      "key": "金牌",
-      "name": "🥇金牌｜影视",
+      "key": "银牌影视",
+      "name": "🥈银牌｜影视",
       "type": 3,
       "api": "https://mdh.dpdns.org/js/jp.js",
       "ext": ""
