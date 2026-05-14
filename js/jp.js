@@ -1,204 +1,163 @@
-// 站点配置信息
-const rule = {
+var rule = {
     title: '金牌影院',
     host: 'https://www.sizhengxt.com',
-    apiUrl: 'https://www.sizhengxt.com/api/vod',  // 主要的API接口地址
-    detailApi: 'https://www.sizhengxt.com/api/vod/detail', // 详情API接口地址
-    searchable: 2,        // 启用搜索
-    quickSearch: 0,
-    filterable: 1,        // 启用筛选
-    class_name: '电影&电视剧&综艺&动漫&短剧&动作片&喜剧片&爱情片&科幻片&恐怖片&剧情片&战争片&国产剧&港剧&日剧&韩剧&海外剧&番剧',
-    class_url: '1&2&3&4&20&6&7&8&9&10&11&12&13&14&15&16&17&18',
+    homeUrl: '/',
+    classUrl: '/vod/show/id/{class}/page/{page}.html',
+    detailUrl: '/vod/detail/id/{vid}.html',
+    searchUrl: '/search/page/{page}.html?wd={wd}',
     headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Content-Type': 'application/json',
-        'Referer': 'https://www.sizhengxt.com/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     },
     timeout: 10000,
+    class_name: '电影&电视剧&综艺&动漫&短剧&动作片&喜剧片&爱情片&科幻片&恐怖片&剧情片&战争片&国产剧&港剧&日剧&韩剧&海外剧&番剧',
+    class_url: '1&2&3&4&20&6&7&8&9&10&11&12&13&14&15&16&17&18'
 };
 
-/**
- * 通用API请求函数
- * @param {string} url API地址
- * @param {Object} params 请求参数
- * @returns {Promise<Object>} 解析后的JSON数据
- */
-async function fetchAPI(url, params = {}) {
-    try {
-        const queryString = new URLSearchParams(params).toString();
-        const fullUrl = queryString ? `${url}?${queryString}` : url;
-        const response = await getHtml(fullUrl, { headers: rule.headers });
-        if (!response) return null;
-        // 处理可能的JSONP格式响应
-        let jsonStr = response;
-        if (response.trim().startsWith('jsonp')) {
-            jsonStr = response.match(/jsonp\((.*)\)/)[1];
-        }
-        return JSON.parse(jsonStr);
-    } catch (error) {
-        log(`API请求失败: ${url}, 错误: ${error}`);
-        return null;
-    }
+// 通用请求函数
+function getPage(url) {
+    return getHtml(url, { headers: rule.headers });
 }
 
-/**
- * 首页数据获取 - 调用API获取推荐视频
- * @returns {string} JSON格式的视频列表
- */
+// 提取视频列表（通用）
+function parseVodList(html, host) {
+    let list = [];
+    // 匹配 <a href="/vod/detail/id/xxx.html" class="xxx"> 或类似结构
+    let reg = /<a[^>]*href="([^"]*\/vod\/detail\/id\/\d+\.html)"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"[^>]*>[\s\S]*?<h[^>]*>([^<]+)<\/h[^>]*>/gi;
+    let match;
+    while ((match = reg.exec(html)) !== null) {
+        let url = match[1];
+        let pic = match[2];
+        let name = match[3];
+        if (name && url) {
+            list.push({
+                vod_id: url,
+                vod_name: name.trim(),
+                vod_pic: pic.startsWith('http') ? pic : host + pic
+            });
+        }
+    }
+    // 如果上面没匹配到，使用更宽松的正则
+    if (list.length === 0) {
+        let reg2 = /<a[^>]*href="([^"]*\/vod\/detail\/id\/\d+\.html)"[^>]*>([^<]+)<\/a>/gi;
+        while ((match = reg2.exec(html)) !== null) {
+            let url = match[1];
+            let name = match[2];
+            if (name && url && !name.includes('播放') && !name.includes('评论')) {
+                list.push({
+                    vod_id: url,
+                    vod_name: name.trim(),
+                    vod_pic: ''
+                });
+            }
+        }
+    }
+    return list;
+}
+
+// 首页
 async function homeVod() {
-    try {
-        const apiData = await fetchAPI(rule.apiUrl, { page: 1, limit: 20 });
-        if (!apiData || !apiData.list) return JSON.stringify({ list: [] });
-        
-        const vodList = apiData.list.map(item => ({
-            vod_id: item.vod_id,
-            vod_name: item.vod_name,
-            vod_pic: item.vod_pic,
-            vod_remarks: item.vod_remarks || '',
-            vod_year: item.vod_year || ''
-        }));
-        
-        return JSON.stringify({ list: vodList });
-    } catch (error) {
-        log(`首页数据获取失败: ${error}`);
-        return JSON.stringify({ list: [] });
-    }
+    let html = await getPage(rule.host + rule.homeUrl);
+    if (!html) return JSON.stringify({ list: [] });
+    let list = parseVodList(html, rule.host);
+    return JSON.stringify({ list: list.slice(0, 20) });
 }
 
-/**
- * 获取分类列表
- * @param {string} tid 分类ID
- * @param {number} pg 页码
- * @param {boolean} filter 是否筛选
- * @param {Object} extend 扩展参数
- * @returns {string} JSON格式的分类视频列表
- */
+// 分类
 async function category(tid, pg, filter, extend) {
-    try {
-        const apiData = await fetchAPI(rule.apiUrl, {
-            class: tid,
-            page: pg,
-            limit: 20
-        });
-        
-        if (!apiData || !apiData.list) return JSON.stringify({ list: [] });
-        
-        const vodList = apiData.list.map(item => ({
-            vod_id: item.vod_id,
-            vod_name: item.vod_name,
-            vod_pic: item.vod_pic,
-            vod_remarks: item.vod_remarks || '',
-            vod_year: item.vod_year || ''
-        }));
-        
-        return JSON.stringify({
-            list: vodList,
-            page: pg,
-            pagecount: apiData.total ? Math.ceil(apiData.total / 20) : 1,
-            limit: 20,
-            total: apiData.total || 0
-        });
-    } catch (error) {
-        log(`分类数据获取失败: ${error}`);
-        return JSON.stringify({ list: [] });
+    let url = rule.host + rule.classUrl.replace('{class}', tid).replace('{page}', pg);
+    let html = await getPage(url);
+    if (!html) return JSON.stringify({ list: [] });
+    let list = parseVodList(html, rule.host);
+    // 尝试提取总页数
+    let pageCount = 1;
+    let pageMatch = html.match(/<a[^>]*href="[^"]*\/page\/(\d+)\.html"[^>]*>(\d+)<\/a>/g);
+    if (pageMatch && pageMatch.length) {
+        let maxPage = 0;
+        for (let link of pageMatch) {
+            let num = parseInt(link.match(/>(\d+)</)[1]);
+            if (num > maxPage) maxPage = num;
+        }
+        if (maxPage > 0) pageCount = maxPage;
     }
+    return JSON.stringify({
+        list: list,
+        page: pg,
+        pagecount: pageCount,
+        limit: 20,
+        total: list.length
+    });
 }
 
-/**
- * 获取视频详情和播放列表
- * @param {string} vod_id 视频ID或URL
- * @returns {string} JSON格式的视频详情和播放列表
- */
-async function detail(vod_id) {
-    try {
-        // 提取视频ID
-        let id = vod_id;
-        if (vod_id.includes('/vod/')) {
-            id = vod_id.split('/').pop().replace('.html', '');
-        }
-        
-        const apiData = await fetchAPI(rule.detailApi, { vod_id: id });
-        if (!apiData || !apiData.data) return JSON.stringify({});
-        
-        const item = apiData.data;
-        const playUrl = {};
-        
-        // 解析播放列表
-        if (item.vod_play_from && item.vod_play_url) {
-            const playFroms = item.vod_play_from.split('$$$');
-            const playUrls = item.vod_play_url.split('$$$');
-            
-            for (let i = 0; i < playFroms.length; i++) {
-                const sourceName = playFroms[i];
-                const sourceUrls = playUrls[i].split('#');
-                
-                const playList = sourceUrls.map(segment => {
-                    const [name, url] = segment.split('$');
-                    return { title: name, url: url };
-                }).filter(segment => segment.url && !segment.url.includes('javascript:'));
-                
-                if (playList.length) {
-                    playUrl[sourceName] = playList;
+// 详情
+async function detail(vod_url) {
+    let html = await getPage(vod_url.startsWith('http') ? vod_url : rule.host + vod_url);
+    if (!html) return JSON.stringify({});
+
+    // 提取标题
+    let title = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] || '';
+    // 提取图片
+    let pic = html.match(/<img[^>]*src="([^"]+)"[^>]*class="[^"]*vod-img[^"]*"/i)?.[1] || '';
+    if (!pic) pic = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i)?.[1] || '';
+    // 提取简介
+    let content = html.match(/<div[^>]*class="[^"]*vod-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '';
+    content = content.replace(/<[^>]+>/g, '').trim();
+
+    // 提取播放列表（关键）
+    let playList = [];
+    // 常见播放列表结构：<div class="playlist"><a href="...">第01集</a> ... </div>
+    let playBlock = html.match(/<div[^>]*class="[^"]*playlist[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    if (playBlock) {
+        let links = playBlock[1].match(/<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/gi);
+        if (links) {
+            for (let link of links) {
+                let url = link.match(/href="([^"]+)"/)?.[1];
+                let name = link.match(/>([^<]+)</)?.[1];
+                if (url && name && !url.includes('javascript:')) {
+                    playList.push({ title: name.trim(), url: url });
                 }
             }
         }
-        
-        return JSON.stringify({
-            vod_id: item.vod_id,
-            vod_name: item.vod_name,
-            vod_pic: item.vod_pic,
-            vod_actor: item.vod_actor || '',
-            vod_director: item.vod_director || '',
-            vod_content: item.vod_content || '',
-            vod_year: item.vod_year || '',
-            vod_area: item.vod_area || '',
-            vod_play_from: Object.keys(playUrl).join('$$$'),
-            vod_play_url: Object.values(playUrl).map(group => group.map(v => `${v.title}$${v.url}`).join('#')).join('$$$')
-        });
-    } catch (error) {
-        log(`详情数据获取失败: ${error}`);
-        return JSON.stringify({});
     }
+    // 如果没找到，尝试其他常见class
+    if (playList.length === 0) {
+        let playBlock2 = html.match(/<ul[^>]*class="[^"]*play-list[^"]*"[^>]*>([\s\S]*?)<\/ul>/i);
+        if (playBlock2) {
+            let links = playBlock2[1].match(/<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/gi);
+            if (links) {
+                for (let link of links) {
+                    let url = link.match(/href="([^"]+)"/)?.[1];
+                    let name = link.match(/>([^<]+)</)?.[1];
+                    if (url && name && !url.includes('javascript:')) {
+                        playList.push({ title: name.trim(), url: url });
+                    }
+                }
+            }
+        }
+    }
+
+    let playFrom = '播放源';
+    let playUrlStr = playList.map(v => `${v.title}$${v.url}`).join('#');
+    return JSON.stringify({
+        vod_id: vod_url,
+        vod_name: title,
+        vod_pic: pic,
+        vod_content: content,
+        vod_play_from: playFrom,
+        vod_play_url: playUrlStr
+    });
 }
 
-/**
- * 播放地址处理
- * @param {string} flag 播放源标识
- * @param {string} id 播放地址
- * @param {Array} flags 所有播放源
- * @returns {string} JSON格式的播放地址
- */
+// 播放
 async function play(flag, id, flags) {
+    // 直接返回链接，如果需要解析重定向可在这里处理
     return JSON.stringify({ parse: 0, url: id });
 }
 
-/**
- * 搜索功能
- * @param {string} wd 搜索关键词
- * @param {boolean} quick 是否快速搜索
- * @param {number} pg 页码
- * @returns {string} JSON格式的搜索结果
- */
+// 搜索
 async function search(wd, quick, pg) {
-    try {
-        const apiData = await fetchAPI(rule.apiUrl, {
-            wd: wd,
-            page: pg,
-            limit: 20
-        });
-        
-        if (!apiData || !apiData.list) return JSON.stringify({ list: [] });
-        
-        const vodList = apiData.list.map(item => ({
-            vod_id: item.vod_id,
-            vod_name: item.vod_name,
-            vod_pic: item.vod_pic,
-            vod_remarks: item.vod_remarks || ''
-        }));
-        
-        return JSON.stringify({ list: vodList });
-    } catch (error) {
-        log(`搜索失败: ${error}`);
-        return JSON.stringify({ list: [] });
-    }
+    let url = rule.host + rule.searchUrl.replace('{wd}', encodeURIComponent(wd)).replace('{page}', pg);
+    let html = await getPage(url);
+    if (!html) return JSON.stringify({ list: [] });
+    let list = parseVodList(html, rule.host);
+    return JSON.stringify({ list: list });
 }
