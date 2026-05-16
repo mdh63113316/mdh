@@ -1,0 +1,105 @@
+{
+  "wallpaper": "https://t.alcy.cc/acg",
+  "ads": [
+    "doubleclick.net",
+    "googleadservices.com",
+    "googlesyndication.com",
+    "adservice.google.com",
+    "adsrvr.org",
+    "adnxs.com"
+  ],
+  "rules": [
+    {
+      "name": "M3U8广告片段",
+      "hosts": [
+        "ad.",
+        "ads."
+      ],
+      "regex": [
+        "\\/ad\\/",
+        "\\/preroll\\/"
+      ]
+    },
+    {
+      "name": "统计",
+      "hosts": [
+        "google-analytics.com"
+      ],
+      "regex": [
+        "collect\\?"
+      ]
+    }
+  ],
+  "sites": [
+      {
+      "key": "永乐",
+      "name": "🥇永乐｜影视",
+      "type": 3,
+      "api": "https://mdh.dpdns.org/js/acsux.js"
+    }
+  ],
+  "flags": [
+    "youku",
+    "qq",
+    "iqiyi",
+    "qiyi",
+    "letv",
+    "sohu",
+    "tudou",
+    "pptv",
+    "mgtv",
+    "wasu",
+    "bilibili"
+  ],
+  "ijk": {
+    "soft": [
+      {
+        "name": "opensles",
+        "value": "0",
+        "category": 1
+      },
+      {
+        "name": "overlay-format",
+        "value": "2",
+        "category": 1
+      },
+      {
+        "name": "framedrop",
+        "value": "1",
+        "category": 4
+      },
+      {
+        "name": "soundtouch",
+        "value": "1",
+        "category": 4
+      },
+      {
+        "name": "mediacodec",
+        "value": "0",
+        "category": 2
+      }
+    ],
+    "hard": [
+      {
+        "name": "opensles",
+        "value": "0",
+        "category": 1
+      },
+      {
+        "name": "overlay-format",
+        "value": "2",
+        "category": 1
+      },
+      {
+        "name": "mediacodec",
+        "value": "1",
+        "category": 2
+      },
+      {
+        "name": "mediacodec-hevc",
+        "value": "1",
+        "category": 2
+      }
+    ]
+  }
+}
