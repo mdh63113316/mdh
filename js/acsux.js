@@ -37,14 +37,17 @@ function getSearchList(html) {
     let items = pdfa(html, ".module-item,.module-card-item");
     items.forEach(it => {
         let idMatch = it.match(/href="\/dt\/(\d+)\.html"/);
-        let nameMatch = it.match(/title="(.*?)"/) || it.match(/alt="(.*?)"/);
+        let nameMatch = it.match(/title="(.*?)"/) || it.match(/alt="(.*?)"/) || it.match(/<strong>(.*?)<\/strong>/);
+        let picMatch = it.match(/data-original="(.*?)"/) || it.match(/src="(.*?)"/);
         if (idMatch && nameMatch && !seen[idMatch[1]]) {
             seen[idMatch[1]] = true;
+            let pic = picMatch ? (picMatch[1] || '') : '';
+            if (pic.startsWith('/')) pic = host + pic;
             videos.push({
                 vod_id: idMatch[1],
                 vod_name: cleanText(nameMatch[1]),
-                vod_pic: '',
-                vod_remarks: '',
+                vod_pic: pic,
+                vod_remarks: cleanText((it.match(/module-item-note">([\s\S]*?)<\/div>/) || ['', ''])[1]),
             });
         }
     });
