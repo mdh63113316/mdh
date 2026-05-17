@@ -2,188 +2,164 @@ let host = 'https://www.sizhengxt.com';
 let headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     "Referer": host + "/",
-    "Cookie": "PGY_Domain_Key=e70c27cbfca2a14f57f4b688cbc057bd"
 };
 
-// 公用函数：清洗文本，去除 HTML 标签与多余空白
+async function init(cfg) {}
+
 function cleanText(str) {
     return String(str || '').replace(/<.*?>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-// 从 HTML 中提取视频列表
 function getList(html) {
     let videos = [];
-    let items = pdfa(html, ".module-item,.module-card-item");
-    items.forEach(it => {
-        let idMatch = it.match(/href="\/(?:vod\/detail\/id\/(\d+)\.html|dt\/(\d+)\.html)/);
-        let nameMatch = it.match(/title="(.*?)"/) || it.match(/alt="(.*?)"/) || it.match(/<strong>(.*?)<\/strong>/);
-        let picMatch = it.match(/data-original="(.*?)"/) || it.match(/src="(.*?)"/);
-        if (idMatch && nameMatch) {
-            let videoId = (idMatch[1] || idMatch[2] || '');
-            let pic = picMatch ? (picMatch[1] || picMatch[2] || '') : '';
-            if (pic && pic.startsWith('/')) pic = host + pic;
+    // 使用通用的方式提取所有 detail 链接
+    let pattern = /href="\/detail\/(\d+)"[^>]*>([^<]+)<\/a>\s*<\/h[234]|href="\/detail\/(\d+)"\s+[^>]*title="([^"]+)"|<h[234]\s+[^>]*><a\s+[^>]*href="\/detail\/(\d+)"[^>]*>([^<]+)<\/a>/g;
+    let matches = [...html.matchAll(pattern)];
+    let seen = {};
+    
+    matches.forEach(match => {
+        let id = match[1] || match[3] || match[5];
+        let name = match[2] || match[4] || match[6];
+        let key = id + '-' + name;
+        
+        if (id && name && !seen[key]) {
+            seen[key] = true;
             videos.push({
-                vod_id: videoId,
-                vod_name: cleanText(nameMatch[1]),
-                vod_pic: pic,
-                vod_remarks: cleanText((it.match(/module-item-note">([\s\S]*?)<\/div>/) || ['', ''])[1]),
-            });
-        }
-    });
-    return videos;
-}
-
-async function init(cfg) {}
-
-// 首页分类
-async function home(filter) {
-    return JSON.stringify({
-        class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '电视剧' },
-            { type_id: '3', type_name: '动漫' },
-            { type_id: '4', type_name: '综艺' }
-        ],
-        filters: {}
-    });
-}
-
-// 首页推荐
-async function homeVod() {
-    let resp = await req(host, { headers: headers });
-    return JSON.stringify({ list: getList(resp.content) });
-}
-
-// 分类页
-async function category(tid, pg, filter, extend) {
-    let p = pg || 1;
-    let url = host + '/vod/show/id/' + tid + '/page/' + p + '.html';
-    let resp = await req(url, { headers: headers });
-    return JSON.stringify({ list: getList(resp.content), page: parseInt(p) });
-}
-
-// 详情页
-async function detail(id) {
-    let url = host + '/vod/detail/id/' + id + '.html';
-    let resp = await req(url, { headers: headers });
-    let html = resp.content;
-
-    // 获取播放源名称
-    let playFrom = pdfa(html, '.module-tab-item').map(it => {
-        return (it.match(/<span>(.*?)<\/span>/) || ['', '默认播放'])[1];
-    }).join('$$$');
-    if (!playFrom) playFrom = '直接播放';
-
-    // 获取播放地址
-    let playUrl = '';
-    let links = pdfa(html, '.module-play-list-content a');
-    if (links.length === 0) {
-        links = pdfa(html, '.playlist a');
-    }
-    if (links.length > 0) {
-        playUrl = links.map(a => {
-            let name = (a.match(/<span>(.*?)<\/span>/) || ['', '播放'])[1];
-            let link = a.match(/href="([^"]+)"/);
-            if (link && link[1]) {
-                let href = link[1];
-                if (href.includes('/vod/play/id/')) {
-                    let match = href.match(/\/vod\/play\/id\/(\d+)\/sid\/(\d+)\/nid\/(\d+)/);
-                    if (match) {
-                        return name + '$' + match[1] + '/' + match[2] + '/' + match[3];
-                    }
-                    return name + '$' + href.match(/\/vod\/play\/id\/(\d+)/)[1];
-                }
-                return name + '$' + href;
-            }
-            return name + '$';
-        }).join('#');
-    } else {
-        // 如果没有播放列表，尝试找iframe
-        let iframeSrc = html.match(/<iframe[^>]*src="([^"]+)"/);
-        if (iframeSrc) {
-            playUrl = '播放$' + iframeSrc[1];
-        }
-    }
-
-    let pic = (html.match(/data-original="(.*?)"/) || ['', ''])[1];
-    if (pic && pic.startsWith('/')) pic = host + pic;
-
-    let vod_name = (html.match(/<h1>(.*?)<\/h1>/) || ['', ''])[1];
-    let vod_content = (html.match(/introduction-content">[\s\S]*?<p>([\s\S]*?)<\/p>/) || ['', ''])[1];
-    vod_content = cleanText(vod_content);
-
-    return JSON.stringify({
-        list: [{
-            vod_id: id,
-            vod_name: vod_name,
-            vod_pic: pic,
-            vod_content: vod_content,
-            vod_play_from: playFrom,
-            vod_play_url: playUrl,
-        }],
-    });
-}
-
-// 搜索
-async function search(wd, quick, pg) {
-    let p = pg || 1;
-    let url = host + '/vod/search.html?wd=' + encodeURIComponent(wd) + '&page=' + p;
-    let resp = await req(url, { headers: headers });
-    let videos = [];
-    let items = pdfa(resp.content, ".module-item,.module-card-item");
-    items.forEach(it => {
-        let idMatch = it.match(/href="\/(?:vod\/detail\/id\/(\d+)\.html|dt\/(\d+)\.html)/);
-        let nameMatch = it.match(/title="(.*?)"/) || it.match(/alt="(.*?)"/);
-        if (idMatch && nameMatch) {
-            videos.push({
-                vod_id: (idMatch[1] || idMatch[2] || ''),
-                vod_name: cleanText(nameMatch[1]),
+                vod_id: id,
+                vod_name: cleanText(name),
                 vod_pic: '',
                 vod_remarks: '',
             });
         }
     });
-    return JSON.stringify({ list: videos });
+    
+    return videos.slice(0, 50);
 }
 
-// 播放解析
-async function play(flag, id, flags) {
-    let playUrl = '';
-    if (id.includes('/')) {
-        // 处理类似 1/2/3 的格式：表示 id/sid/nid
-        let parts = id.split('/');
-        if (parts.length >= 3) {
-            playUrl = host + '/vod/play/id/' + parts[0] + '/sid/' + parts[1] + '/nid/' + parts[2] + '.html';
-        } else {
-            playUrl = host + '/vod/play/id/' + parts[0] + '.html';
-        }
-    } else {
-        playUrl = host + '/vod/play/id/' + id + '.html';
-    }
-    let resp = await req(playUrl, { headers: headers });
+async function home(filter) {
+    return JSON.stringify({
+        class: [
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '电视剧' },
+            { type_id: '3', type_name: '综艺' },
+            { type_id: '4', type_name: '动漫' },
+        ],
+        filters: {
+            '1': [{ key: 'class', name: '类型', value: [
+                { n: '全部', v: '' },
+                { n: '喜剧', v: '喜剧' },
+                { n: '动作', v: '动作' },
+                { n: '战争', v: '战争' },
+                { n: '爱情', v: '爱情' },
+                { n: '悬疑', v: '悬疑' },
+                { n: '科幻', v: '科幻' },
+            ] }],
+            '2': [{ key: 'class', name: '类型', value: [
+                { n: '全部', v: '' },
+                { n: '国产剧', v: '国产剧' },
+                { n: '港台剧', v: '港台剧' },
+                { n: '日剧', v: '日剧' },
+                { n: '韩剧', v: '韩剧' },
+                { n: '欧美剧', v: '欧美剧' },
+            ] }],
+            '3': [{ key: 'class', name: '类型', value: [
+                { n: '全部', v: '' },
+                { n: '内地综艺', v: '内地综艺' },
+                { n: '港台综艺', v: '港台综艺' },
+                { n: '日本综艺', v: '日本综艺' },
+                { n: '韩国综艺', v: '韩国综艺' },
+            ] }],
+            '4': [{ key: 'class', name: '类型', value: [
+                { n: '全部', v: '' },
+                { n: '国产动漫', v: '国产动漫' },
+                { n: '日本动漫', v: '日本动漫' },
+                { n: '欧美动漫', v: '欧美动漫' },
+            ] }],
+        },
+    });
+}
+
+async function homeVod() {
+    let resp = await req(host, { 
+        headers: headers,
+        timeout: 5000,
+        redirect: 'follow'
+    });
+    let html = resp.content || '';
+    return JSON.stringify({ list: getList(html) });
+}
+
+async function category(tid, pg, filter, extend) {
+    let p = pg || 1;
+    let targetId = (extend && extend.class) ? extend.class : tid;
+    let url = host + '/type/' + targetId;
+    if (parseInt(p) > 1) url += '/page/' + p;
+    let resp = await req(url, { headers: headers });
+    return JSON.stringify({ list: getList(resp.content), page: parseInt(p) });
+}
+
+async function detail(id) {
+    let url = host + '/detail/' + id;
+    let resp = await req(url, { headers: headers });
     let html = resp.content;
 
-    // 查找视频地址
-    let m3u8Match = html.match(/"url":"([^"]+\.m3u8)"/) || html.match(/https?:\/\/[^"']+\.m3u8/);
-    if (m3u8Match) {
-        return JSON.stringify({ parse: 0, url: m3u8Match[1].replace(/\\/g, ''), header: headers });
-    }
+    let name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/) || ['', ''])[1];
+    let pic = (html.match(/data-original="([^"]+)"/) || html.match(/<img[^>]+src="([^"]+)"/)) || ['', ''];
+    pic = pic[1] || '';
+    if (pic && pic.startsWith('/')) pic = host + pic;
 
-    // 查找iframe里的地址
-    let iframeMatch = html.match(/<iframe[^>]*src="([^"]+)"/);
-    if (iframeMatch && iframeMatch[1]) {
-        // 递归解析iframe
-        let iframeUrl = iframeMatch[1];
-        if (iframeUrl.startsWith('/')) iframeUrl = host + iframeUrl;
-        let iframeResp = await req(iframeUrl, { headers: headers });
-        let iframeHtml = iframeResp.content;
-        let iframeM3u8 = iframeHtml.match(/"url":"([^"]+\.m3u8)"/) || iframeHtml.match(/https?:\/\/[^"']+\.m3u8/);
-        if (iframeM3u8) {
-            return JSON.stringify({ parse: 0, url: iframeM3u8[1].replace(/\\/g, ''), header: headers });
-        }
-    }
+    let content = cleanText((html.match(/class="[^"]*content[^"]*"[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/) || 
+        html.match(/<meta name="description" content="([^"]*)"/) || ['', ''])[1]);
 
-    return JSON.stringify({ parse: 1, url: playUrl, header: headers });
+    let playFrom = pdfa(html, '.myui-content__list,.tab-pane').map(it => 
+        (it.match(/<h3[^>]*>([^<]+)<\/h3>/) || it.match(/<span[^>]*>([^<]+)<\/span>/) || ['', '线路'])[1]
+    ).join('$$$');
+
+    let playUrl = pdfa(html, '.myui-content__list,.tab-pane').map(list => 
+        pdfa(list, 'a').map(a => {
+            let n = (a.match(/<span[^>]*>([^<]+)<\/span>/) || ['', '播放'])[1];
+            let v = a.match(/href="\/vod\/play\/(\d+)\/sid\/(\d+)"/);
+            return n + '$' + (v ? (v[1] + '/' + v[2]) : '');
+        }).filter(x => x.split('$')[1]).join('#')
+    ).filter(x => x).join('$$$');
+
+    return JSON.stringify({
+        list: [{
+            vod_id: id,
+            vod_name: cleanText(name),
+            vod_pic: pic,
+            vod_content: content,
+            vod_play_from: playFrom || '播放',
+            vod_play_url: playUrl,
+        }],
+    });
+}
+
+async function search(wd, quick, pg) {
+    let p = pg || 1;
+    let url = host + '/search/wd/' + encodeURIComponent(wd);
+    if (parseInt(p) > 1) url += '/page/' + p;
+    let resp = await req(url, { headers: headers });
+    return JSON.stringify({ list: getList(resp.content) });
+}
+
+async function play(flag, id, flags) {
+    let parts = id.split('/');
+    let vid = parts[0];
+    let sid = parts[1] || '1';
+    let url = host + '/vod/play/' + vid + '/sid/' + sid;
+    let resp = await req(url, { headers: headers });
+    
+    let m3u8 = resp.content.match(/"url":"([^"]+\.m3u8)"/);
+    if (m3u8) return JSON.stringify({ parse: 0, url: m3u8[1].replace(/\\/g, ''), header: headers });
+    
+    let m3u8b = resp.content.match(/https?:\/\/[^"']+\.m3u8/);
+    if (m3u8b) return JSON.stringify({ parse: 0, url: m3u8b[0], header: headers });
+    
+    let iframe = resp.content.match(/<iframe[^>]+src="([^"]+)"/);
+    if (iframe) return JSON.stringify({ parse: 1, url: iframe[1], header: headers });
+    
+    return JSON.stringify({ parse: 1, url: url, header: headers });
 }
 
 export default { init, home, homeVod, category, detail, search, play };
