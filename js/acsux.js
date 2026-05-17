@@ -1,232 +1,225 @@
-// 网站配置
-var host = 'https://acsux.cn';
-var headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Referer": host + "/"
+const host = 'https://acsux.cn';
+const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    Referer: host + '/',
 };
 
-// 通用请求函数（无 AbortController，兼容老环境）
-function req(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    for (var key in headers) {
-        xhr.setRequestHeader(key, headers[key]);
-    }
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                callback(null, xhr.responseText);
-            } else {
-                callback(new Error('HTTP ' + xhr.status));
-            }
-        }
-    };
-    xhr.onerror = function() {
-        callback(new Error('Network error'));
-    };
-    xhr.send();
+async function req(url) {
+    const res = await fetch(url, { headers, redirect: 'follow' });
+    const text = await res.text();
+    return text;
 }
 
-// 同步请求包装器（TVBox 环境通常支持同步）
-function reqSync(url) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, false);
-    for (var key in headers) {
-        xhr.setRequestHeader(key, headers[key]);
-    }
-    xhr.send();
-    if (xhr.status === 200) {
-        return xhr.responseText;
-    } else {
-        throw new Error('HTTP ' + xhr.status);
-    }
+function htmlDecode(str) {
+    return str
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>');
 }
 
-// 提取视频列表（根据真实 HTML 结构）
+function cleanText(str) {
+    return String(str || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+}
+
 function getList(html) {
-    var videos = [];
-    // 匹配视频块：<a class="module-poster-item module-item" href="/dt/数字.html" title="标题">
-    var reg = /<a[^>]+class="module-poster-item module-item"[^>]+href="\/dt\/(\d+)\.html"[^>]+title="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-    var match;
-    while (match = reg.exec(html)) {
-        var id = match[1];
-        var title = match[2];
-        var block = match[3];
-        // 提取图片
-        var pic = '';
-        var picMatch = /data-original="([^"]+)"/.exec(block);
-        if (picMatch) pic = picMatch[1];
-        // 提取备注（集数）
-        var note = '';
-        var noteMatch = /<div class="module-item-note">([^<]+)<\/div>/.exec(block);
-        if (noteMatch) note = noteMatch[1];
-        videos.push({
-            vod_id: id,
-            vod_name: title,
-            vod_pic: pic,
-            vod_remarks: note
-        });
-    }
-    // 如果一条都没匹配到，返回调试信息（便于排查）
-    if (videos.length === 0) {
-        videos.push({
-            vod_id: 'debug',
-            vod_name: '调试：未解析到数据，请检查HTML结构',
-            vod_pic: '',
-            vod_remarks: ''
-        });
-    }
-    return videos;
-}
-
-// 从播放页提取 m3u8 地址（同步）
-function getM3u8FromPlayPage(playUrl) {
-    try {
-        var html = reqSync(playUrl);
-        // 匹配 var player_aaaa = {"url":"https://...m3u8", ...}
-        var reg = /"url":"([^"]+\.m3u8)"/;
-        var match = reg.exec(html);
-        if (match) {
-            return match[1].replace(/\\\//g, '/');
+    const list = [];
+    const itemRe = /<a[^>]+href="\/dt\/(\d+)\.html"(?:[^>]*title="([^"]+)")?[^>]*>([\s\S]*?)<\/a>/g;
+    let match;
+    while ((match = itemRe.exec(html))) {
+        const id = match[1];
+        let name = cleanText(htmlDecode(match[2] || '')) || '';
+        const block = match[3];
+        if (!name) {
+            name = cleanText(htmlDecode((/alt="([^"]+)"/.exec(block) || [])[1] || ''));
         }
-        // 备用：直接匹配 m3u8 链接
-        var m3u8Match = html.match(/https?:\/\/[^"'\s>]+\.m3u8/);
-        if (m3u8Match) return m3u8Match[0];
-        return '';
-    } catch(e) {
-        return '';
-    }
-}
-
-// 从详情页提取播放列表（多源多集）
-function extractPlaylist(html, vodId) {
-    var sources = [];
-    // 匹配所有播放源标签（例如：优质、红牛）
-    var sourceReg = /<div class="module-tab-item tab-item"[^>]*data-dropdown-value="([^"]+)">[\s\S]*?<span>([^<]+)<\/span>/g;
-    var sourceMatch;
-    var sourceList = [];
-    while (sourceMatch = sourceReg.exec(html)) {
-        sourceList.push({ key: sourceMatch[1], name: sourceMatch[2] });
-    }
-    if (sourceList.length === 0) {
-        // 默认一个源
-        sourceList.push({ key: 'default', name: '播放' });
-    }
-    // 提取所有集数链接（格式：/play/447434-1-1.html）
-    var epReg = /onclick="location\.replace\('\/play\/(\d+-\d+-\d+)\.html'\)"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/g;
-    var epMatch;
-    var episodesBySource = {};
-    while (epMatch = epReg.exec(html)) {
-        var playId = epMatch[1];      // 如 "447434-1-1"
-        var epName = epMatch[2];      // 如 "第01集"
-        var parts = playId.split('-');
-        var sourceIdx = parseInt(parts[1], 10); // 源索引：优质=1，红牛=2
-        if (!episodesBySource[sourceIdx]) episodesBySource[sourceIdx] = [];
-        episodesBySource[sourceIdx].push(epName + '$' + playId);
-    }
-    // 按源索引顺序组装
-    for (var i = 1; i <= sourceList.length; i++) {
-        if (episodesBySource[i] && episodesBySource[i].length > 0) {
-            var sourceName = sourceList[i-1].name;
-            sources.push({
-                name: sourceName,
-                url: episodesBySource[i].join('#')
-            });
+        let pic = '';
+        const picMatch = /data-original="([^"]+)"/.exec(block) || /src="([^"]+)"/.exec(block);
+        if (picMatch) {
+            pic = picMatch[1];
+            if (pic.startsWith('/')) pic = host + pic;
         }
-    }
-    // 如果还是没有集数，尝试直接获取单集（立即播放）
-    if (sources.length === 0) {
-        var directPlay = html.match(/location\.replace\('\/play\/([^']+)\.html'\)/);
-        if (directPlay) {
-            sources.push({
-                name: '播放',
-                url: '播放$' + directPlay[1]
-            });
-        }
-    }
-    var playFrom = sources.map(function(s) { return s.name; }).join('$$$');
-    var playUrl = sources.map(function(s) { return s.url; }).join('$$$');
-    return { playFrom: playFrom, playUrl: playUrl };
-}
-
-// ======================== TVBox 接口函数（必须全局） ========================
-function init(cfg) { return; }
-
-function home(filter) {
-    return JSON.stringify({
-        class: [
-            { type_id: '2', type_name: '电影' },
-            { type_id: '1', type_name: '剧集' },
-            { type_id: '3', type_name: '动漫' },
-            { type_id: '4', type_name: '综艺' }
-        ],
-        filters: {}
-    });
-}
-
-function homeVod() {
-    var html = reqSync(host);
-    var list = getList(html);
-    return JSON.stringify({ list: list });
-}
-
-function category(tid, pg) {
-    var page = pg || 1;
-    var url = host + '/cp/' + tid + (page > 1 ? '/page/' + page + '.html' : '.html');
-    var html = reqSync(url);
-    var list = getList(html);
-    return JSON.stringify({ list: list, page: page });
-}
-
-function detail(id) {
-    var url = host + '/dt/' + id + '.html';
-    var html = reqSync(url);
-    // 提取名称
-    var name = '';
-    var nameMatch = html.match(/<h1>([^<]+)<\/h1>/);
-    if (nameMatch) name = nameMatch[1];
-    // 提取图片
-    var pic = '';
-    var picMatch = html.match(/data-original="([^"]+\.jpg)"/);
-    if (picMatch) pic = picMatch[1];
-    // 提取简介
-    var content = '';
-    var contentMatch = html.match(/<meta name="description" content="([^"]+)"/);
-    if (contentMatch) content = contentMatch[1];
-    // 提取播放列表
-    var playlist = extractPlaylist(html, id);
-    return JSON.stringify({
-        list: [{
+        const remark = cleanText((/class="module-item-note">([\s\S]*?)<\/div>/.exec(block) || [])[1] || '');
+        list.push({
             vod_id: id,
             vod_name: name,
             vod_pic: pic,
-            vod_content: content,
-            vod_play_from: playlist.playFrom,
-            vod_play_url: playlist.playUrl
-        }]
+            vod_remarks: remark,
+        });
+    }
+    return list;
+}
+
+function getSearchList(html) {
+    const list = [];
+    const seen = new Set();
+    const itemRe = /<a[^>]+href="\/dt\/(\d+)\.html"[^>]*>([\s\S]*?)<\/a>/g;
+    let match;
+    while ((match = itemRe.exec(html))) {
+        const id = match[1];
+        if (seen.has(id)) continue;
+        seen.add(id);
+        const block = match[2];
+        const title = cleanText(htmlDecode((/alt="([^"]+)"/.exec(block) || [])[1] || ''));
+        if (!title) continue;
+        list.push({
+            vod_id: id,
+            vod_name: title,
+            vod_pic: '',
+            vod_remarks: '',
+        });
+    }
+    return list;
+}
+
+async function init(cfg) {
+    return;
+}
+
+async function home() {
+    return JSON.stringify({
+        class: [
+            { type_id: '1', type_name: '剧集' },
+            { type_id: '2', type_name: '电影' },
+            { type_id: '3', type_name: '动漫' },
+            { type_id: '4', type_name: '综艺' },
+        ],
+        filters: {
+            '1': [
+                {
+                    key: 'class',
+                    name: '类型',
+                    value: [
+                        { n: '全部', v: '' },
+                        { n: '爱情', v: '爱情' },
+                        { n: '古装', v: '古装' },
+                        { n: '犯罪', v: '犯罪' },
+                        { n: '冒险', v: '冒险' },
+                        { n: '悬疑', v: '悬疑' },
+                        { n: '惊悚', v: '惊悚' },
+                        { n: '喜剧', v: '喜剧' },
+                    ],
+                },
+            ],
+            '2': [
+                {
+                    key: 'class',
+                    name: '类型',
+                    value: [
+                        { n: '全部', v: '' },
+                        { n: '动作片', v: '动作片' },
+                        { n: '喜剧片', v: '喜剧片' },
+                        { n: '爱情片', v: '爱情片' },
+                        { n: '科幻片', v: '科幻片' },
+                        { n: '恐怖片', v: '恐怖片' },
+                    ],
+                },
+            ],
+            '3': [
+                {
+                    key: 'class',
+                    name: '类型',
+                    value: [
+                        { n: '全部', v: '' },
+                        { n: '国产动漫', v: '国产动漫' },
+                        { n: '日本动漫', v: '日本动漫' },
+                        { n: '欧美动漫', v: '欧美动漫' },
+                        { n: '其他动漫', v: '其他动漫' },
+                    ],
+                },
+            ],
+            '4': [
+                {
+                    key: 'class',
+                    name: '类型',
+                    value: [
+                        { n: '全部', v: '' },
+                        { n: '内地综艺', v: '内地综艺' },
+                        { n: '港台综艺', v: '港台综艺' },
+                        { n: '日本综艺', v: '日本综艺' },
+                        { n: '韩国综艺', v: '韩国综艺' },
+                    ],
+                },
+            ],
+        },
     });
 }
 
-function play(flag, id, flags) {
-    // 如果 id 已经是完整的 m3u8 链接（外部解析器传入）
-    if (id.indexOf('http') === 0 && id.indexOf('.m3u8') !== -1) {
-        return JSON.stringify({ parse: 0, url: id, header: headers });
-    }
-    // 否则构造播放页 URL
-    var playPageUrl = host + '/play/' + id + '.html';
-    var m3u8 = getM3u8FromPlayPage(playPageUrl);
-    if (m3u8) {
-        return JSON.stringify({ parse: 0, url: m3u8, header: headers });
-    }
-    // 如果提取不到 m3u8，交给外部解析器
-    return JSON.stringify({ parse: 1, url: playPageUrl, header: headers });
+async function homeVod() {
+    const html = await req(host);
+    return JSON.stringify({ list: getList(html) });
 }
 
-function search(wd, quick, pg) {
-    var page = pg || 1;
-    var searchUrl = host + '/search/' + encodeURIComponent(wd) + '-------------.html';
-    if (page > 1) searchUrl = host + '/search/' + encodeURIComponent(wd) + '-------------.html/page/' + page + '.html';
-    var html = reqSync(searchUrl);
-    var list = getList(html);
-    return JSON.stringify({ list: list });
+async function category(tid, pg, filter, extend) {
+    const p = parseInt(pg || 1, 10);
+    const targetId = extend && extend.class ? extend.class : tid;
+    const url = host + '/cp/' + targetId + (p > 1 ? '/page/' + p + '.html' : '.html');
+    const html = await req(url);
+    return JSON.stringify({ list: getList(html), page: p });
 }
+
+async function detail(id) {
+    const html = await req(host + '/dt/' + id + '.html');
+    const name = (/<h1[^>]*>([^<]+)<\/h1>/.exec(html) || [])[1] || '';
+    let pic = (/<img[^>]+(?:data-original|src)="([^"]+)"/.exec(html) || [])[1] || '';
+    if (pic.startsWith('/')) pic = host + pic;
+    const content = cleanText((/<div class="module-info-content[\s\S]*?<p>([\s\S]*?)<\/p>/.exec(html) || [])[1] || (/<meta name="description" content="([^"]*)"/.exec(html) || [])[1] || '');
+    const froms = [];
+    for (const m of html.matchAll(/<div class="module-tab-item"[\s\S]*?<span>([^<]+)<\/span>/g)) {
+        froms.push(cleanText(m[1]));
+    }
+    const playBlocks = [];
+    for (const block of html.matchAll(/<div class="module-play-list-content[\s\S]*?<\/div>/g)) {
+        const items = [];
+        for (const a of block[0].matchAll(/onclick="location\.replace\('\/play\/([^']+)'\)"[^>]*>\s*<span>([^<]+)<\/span>/g)) {
+            const title = cleanText(a[2]);
+            const value = a[1];
+            items.push(title + '$' + value);
+        }
+        if (items.length) playBlocks.push(items.join('#'));
+    }
+    return JSON.stringify({
+        list: [{
+            vod_id: id,
+            vod_name: cleanText(htmlDecode(name)),
+            vod_pic: pic,
+            vod_content: content,
+            vod_play_from: playBlocks.length ? (froms.length ? froms.join('$$$') : '播放') : '播放',
+            vod_play_url: playBlocks.join('$$$'),
+        }],
+    });
+}
+
+async function search(wd, quick, pg) {
+    const p = parseInt(pg || 1, 10);
+    let url = host + '/search/' + encodeURIComponent(wd) + '-------------.html';
+    if (p > 1) url = host + '/search/' + encodeURIComponent(wd) + '-------------.html/page/' + p + '.html';
+    const html = await req(url);
+    return JSON.stringify({ list: getSearchList(html) });
+}
+
+async function play(flag, id, flags) {
+    const rawId = String(id || '');
+    const playUrl = rawId.endsWith('.html') ? host + '/play/' + rawId : host + '/play/' + rawId + '/';
+    const html = await req(playUrl);
+    const m3u8 = html.match(/https?:\/\/[^"'\s>]+\.m3u8/);
+    if (m3u8) {
+        return JSON.stringify({ parse: 0, url: m3u8[0].replace(/\\/g, ''), header: headers });
+    }
+    const escaped = html.match(/url":"([^"]+\.m3u8)"/);
+    if (escaped) {
+        return JSON.stringify({ parse: 0, url: escaped[1].replace(/\\\//g, '/'), header: headers });
+    }
+    const iframe = html.match(/<iframe[^>]+src="([^"]+)"/);
+    if (iframe) {
+        return JSON.stringify({ parse: 1, url: iframe[1], header: headers });
+    }
+    const srcLink = html.match(/href="([^"]+\.m3u8)"/);
+    if (srcLink) {
+        return JSON.stringify({ parse: 0, url: srcLink[1], header: headers });
+    }
+    return JSON.stringify({ parse: 1, url: playUrl, header: headers });
+}
+
+export default { init, home, homeVod, category, detail, search, play };
