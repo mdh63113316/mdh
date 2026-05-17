@@ -1,163 +1,189 @@
-var rule = {
-    title: '金牌影院',
-    host: 'https://www.sizhengxt.com',
-    homeUrl: '/',
-    classUrl: '/vod/show/id/{class}/page/{page}.html',
-    detailUrl: '/vod/detail/id/{vid}.html',
-    searchUrl: '/search/page/{page}.html?wd={wd}',
-    headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    },
-    timeout: 10000,
-    class_name: '电影&电视剧&综艺&动漫&短剧&动作片&喜剧片&爱情片&科幻片&恐怖片&剧情片&战争片&国产剧&港剧&日剧&韩剧&海外剧&番剧',
-    class_url: '1&2&3&4&20&6&7&8&9&10&11&12&13&14&15&16&17&18'
+let host = 'https://www.sizhengxt.com';
+let headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Referer": host + "/",
+    "Cookie": "PGY_Domain_Key=e70c27cbfca2a14f57f4b688cbc057bd"
 };
 
-// 通用请求函数
-function getPage(url) {
-    return getHtml(url, { headers: rule.headers });
+// 公用函数：清洗文本，去除 HTML 标签与多余空白
+function cleanText(str) {
+    return String(str || '').replace(/<.*?>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-// 提取视频列表（通用）
-function parseVodList(html, host) {
-    let list = [];
-    // 匹配 <a href="/vod/detail/id/xxx.html" class="xxx"> 或类似结构
-    let reg = /<a[^>]*href="([^"]*\/vod\/detail\/id\/\d+\.html)"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"[^>]*>[\s\S]*?<h[^>]*>([^<]+)<\/h[^>]*>/gi;
-    let match;
-    while ((match = reg.exec(html)) !== null) {
-        let url = match[1];
-        let pic = match[2];
-        let name = match[3];
-        if (name && url) {
-            list.push({
-                vod_id: url,
-                vod_name: name.trim(),
-                vod_pic: pic.startsWith('http') ? pic : host + pic
+// 从 HTML 中提取视频列表
+function getList(html) {
+    let videos = [];
+    let items = pdfa(html, ".module-item,.module-card-item");
+    items.forEach(it => {
+        let idMatch = it.match(/href="\/(?:vod\/detail\/id\/(\d+)\.html|dt\/(\d+)\.html)/);
+        let nameMatch = it.match(/title="(.*?)"/) || it.match(/alt="(.*?)"/) || it.match(/<strong>(.*?)<\/strong>/);
+        let picMatch = it.match(/data-original="(.*?)"/) || it.match(/src="(.*?)"/);
+        if (idMatch && nameMatch) {
+            let videoId = (idMatch[1] || idMatch[2] || '');
+            let pic = picMatch ? (picMatch[1] || picMatch[2] || '') : '';
+            if (pic && pic.startsWith('/')) pic = host + pic;
+            videos.push({
+                vod_id: videoId,
+                vod_name: cleanText(nameMatch[1]),
+                vod_pic: pic,
+                vod_remarks: cleanText((it.match(/module-item-note">([\s\S]*?)<\/div>/) || ['', ''])[1]),
             });
         }
-    }
-    // 如果上面没匹配到，使用更宽松的正则
-    if (list.length === 0) {
-        let reg2 = /<a[^>]*href="([^"]*\/vod\/detail\/id\/\d+\.html)"[^>]*>([^<]+)<\/a>/gi;
-        while ((match = reg2.exec(html)) !== null) {
-            let url = match[1];
-            let name = match[2];
-            if (name && url && !name.includes('播放') && !name.includes('评论')) {
-                list.push({
-                    vod_id: url,
-                    vod_name: name.trim(),
-                    vod_pic: ''
-                });
-            }
-        }
-    }
-    return list;
+    });
+    return videos;
 }
 
-// 首页
+async function init(cfg) {}
+
+// 首页分类
+async function home(filter) {
+    return JSON.stringify({
+        class: [
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '电视剧' },
+            { type_id: '3', type_name: '动漫' },
+            { type_id: '4', type_name: '综艺' }
+        ],
+        filters: {}
+    });
+}
+
+// 首页推荐
 async function homeVod() {
-    let html = await getPage(rule.host + rule.homeUrl);
-    if (!html) return JSON.stringify({ list: [] });
-    let list = parseVodList(html, rule.host);
-    return JSON.stringify({ list: list.slice(0, 20) });
+    let resp = await req(host, { headers: headers });
+    return JSON.stringify({ list: getList(resp.content) });
 }
 
-// 分类
+// 分类页
 async function category(tid, pg, filter, extend) {
-    let url = rule.host + rule.classUrl.replace('{class}', tid).replace('{page}', pg);
-    let html = await getPage(url);
-    if (!html) return JSON.stringify({ list: [] });
-    let list = parseVodList(html, rule.host);
-    // 尝试提取总页数
-    let pageCount = 1;
-    let pageMatch = html.match(/<a[^>]*href="[^"]*\/page\/(\d+)\.html"[^>]*>(\d+)<\/a>/g);
-    if (pageMatch && pageMatch.length) {
-        let maxPage = 0;
-        for (let link of pageMatch) {
-            let num = parseInt(link.match(/>(\d+)</)[1]);
-            if (num > maxPage) maxPage = num;
-        }
-        if (maxPage > 0) pageCount = maxPage;
-    }
-    return JSON.stringify({
-        list: list,
-        page: pg,
-        pagecount: pageCount,
-        limit: 20,
-        total: list.length
-    });
+    let p = pg || 1;
+    let url = host + '/vod/show/id/' + tid + '/page/' + p + '.html';
+    let resp = await req(url, { headers: headers });
+    return JSON.stringify({ list: getList(resp.content), page: parseInt(p) });
 }
 
-// 详情
-async function detail(vod_url) {
-    let html = await getPage(vod_url.startsWith('http') ? vod_url : rule.host + vod_url);
-    if (!html) return JSON.stringify({});
+// 详情页
+async function detail(id) {
+    let url = host + '/vod/detail/id/' + id + '.html';
+    let resp = await req(url, { headers: headers });
+    let html = resp.content;
 
-    // 提取标题
-    let title = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] || '';
-    // 提取图片
-    let pic = html.match(/<img[^>]*src="([^"]+)"[^>]*class="[^"]*vod-img[^"]*"/i)?.[1] || '';
-    if (!pic) pic = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i)?.[1] || '';
-    // 提取简介
-    let content = html.match(/<div[^>]*class="[^"]*vod-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '';
-    content = content.replace(/<[^>]+>/g, '').trim();
+    // 获取播放源名称
+    let playFrom = pdfa(html, '.module-tab-item').map(it => {
+        return (it.match(/<span>(.*?)<\/span>/) || ['', '默认播放'])[1];
+    }).join('$$$');
+    if (!playFrom) playFrom = '直接播放';
 
-    // 提取播放列表（关键）
-    let playList = [];
-    // 常见播放列表结构：<div class="playlist"><a href="...">第01集</a> ... </div>
-    let playBlock = html.match(/<div[^>]*class="[^"]*playlist[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-    if (playBlock) {
-        let links = playBlock[1].match(/<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/gi);
-        if (links) {
-            for (let link of links) {
-                let url = link.match(/href="([^"]+)"/)?.[1];
-                let name = link.match(/>([^<]+)</)?.[1];
-                if (url && name && !url.includes('javascript:')) {
-                    playList.push({ title: name.trim(), url: url });
-                }
-            }
-        }
+    // 获取播放地址
+    let playUrl = '';
+    let links = pdfa(html, '.module-play-list-content a');
+    if (links.length === 0) {
+        links = pdfa(html, '.playlist a');
     }
-    // 如果没找到，尝试其他常见class
-    if (playList.length === 0) {
-        let playBlock2 = html.match(/<ul[^>]*class="[^"]*play-list[^"]*"[^>]*>([\s\S]*?)<\/ul>/i);
-        if (playBlock2) {
-            let links = playBlock2[1].match(/<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/gi);
-            if (links) {
-                for (let link of links) {
-                    let url = link.match(/href="([^"]+)"/)?.[1];
-                    let name = link.match(/>([^<]+)</)?.[1];
-                    if (url && name && !url.includes('javascript:')) {
-                        playList.push({ title: name.trim(), url: url });
+    if (links.length > 0) {
+        playUrl = links.map(a => {
+            let name = (a.match(/<span>(.*?)<\/span>/) || ['', '播放'])[1];
+            let link = a.match(/href="([^"]+)"/);
+            if (link && link[1]) {
+                let href = link[1];
+                if (href.includes('/vod/play/id/')) {
+                    let match = href.match(/\/vod\/play\/id\/(\d+)\/sid\/(\d+)\/nid\/(\d+)/);
+                    if (match) {
+                        return name + '$' + match[1] + '/' + match[2] + '/' + match[3];
                     }
+                    return name + '$' + href.match(/\/vod\/play\/id\/(\d+)/)[1];
                 }
+                return name + '$' + href;
             }
+            return name + '$';
+        }).join('#');
+    } else {
+        // 如果没有播放列表，尝试找iframe
+        let iframeSrc = html.match(/<iframe[^>]*src="([^"]+)"/);
+        if (iframeSrc) {
+            playUrl = '播放$' + iframeSrc[1];
         }
     }
 
-    let playFrom = '播放源';
-    let playUrlStr = playList.map(v => `${v.title}$${v.url}`).join('#');
-    return JSON.stringify({
-        vod_id: vod_url,
-        vod_name: title,
-        vod_pic: pic,
-        vod_content: content,
-        vod_play_from: playFrom,
-        vod_play_url: playUrlStr
-    });
-}
+    let pic = (html.match(/data-original="(.*?)"/) || ['', ''])[1];
+    if (pic && pic.startsWith('/')) pic = host + pic;
 
-// 播放
-async function play(flag, id, flags) {
-    // 直接返回链接，如果需要解析重定向可在这里处理
-    return JSON.stringify({ parse: 0, url: id });
+    let vod_name = (html.match(/<h1>(.*?)<\/h1>/) || ['', ''])[1];
+    let vod_content = (html.match(/introduction-content">[\s\S]*?<p>([\s\S]*?)<\/p>/) || ['', ''])[1];
+    vod_content = cleanText(vod_content);
+
+    return JSON.stringify({
+        list: [{
+            vod_id: id,
+            vod_name: vod_name,
+            vod_pic: pic,
+            vod_content: vod_content,
+            vod_play_from: playFrom,
+            vod_play_url: playUrl,
+        }],
+    });
 }
 
 // 搜索
 async function search(wd, quick, pg) {
-    let url = rule.host + rule.searchUrl.replace('{wd}', encodeURIComponent(wd)).replace('{page}', pg);
-    let html = await getPage(url);
-    if (!html) return JSON.stringify({ list: [] });
-    let list = parseVodList(html, rule.host);
-    return JSON.stringify({ list: list });
+    let p = pg || 1;
+    let url = host + '/vod/search.html?wd=' + encodeURIComponent(wd) + '&page=' + p;
+    let resp = await req(url, { headers: headers });
+    let videos = [];
+    let items = pdfa(resp.content, ".module-item,.module-card-item");
+    items.forEach(it => {
+        let idMatch = it.match(/href="\/(?:vod\/detail\/id\/(\d+)\.html|dt\/(\d+)\.html)/);
+        let nameMatch = it.match(/title="(.*?)"/) || it.match(/alt="(.*?)"/);
+        if (idMatch && nameMatch) {
+            videos.push({
+                vod_id: (idMatch[1] || idMatch[2] || ''),
+                vod_name: cleanText(nameMatch[1]),
+                vod_pic: '',
+                vod_remarks: '',
+            });
+        }
+    });
+    return JSON.stringify({ list: videos });
 }
+
+// 播放解析
+async function play(flag, id, flags) {
+    let playUrl = '';
+    if (id.includes('/')) {
+        // 处理类似 1/2/3 的格式：表示 id/sid/nid
+        let parts = id.split('/');
+        if (parts.length >= 3) {
+            playUrl = host + '/vod/play/id/' + parts[0] + '/sid/' + parts[1] + '/nid/' + parts[2] + '.html';
+        } else {
+            playUrl = host + '/vod/play/id/' + parts[0] + '.html';
+        }
+    } else {
+        playUrl = host + '/vod/play/id/' + id + '.html';
+    }
+    let resp = await req(playUrl, { headers: headers });
+    let html = resp.content;
+
+    // 查找视频地址
+    let m3u8Match = html.match(/"url":"([^"]+\.m3u8)"/) || html.match(/https?:\/\/[^"']+\.m3u8/);
+    if (m3u8Match) {
+        return JSON.stringify({ parse: 0, url: m3u8Match[1].replace(/\\/g, ''), header: headers });
+    }
+
+    // 查找iframe里的地址
+    let iframeMatch = html.match(/<iframe[^>]*src="([^"]+)"/);
+    if (iframeMatch && iframeMatch[1]) {
+        // 递归解析iframe
+        let iframeUrl = iframeMatch[1];
+        if (iframeUrl.startsWith('/')) iframeUrl = host + iframeUrl;
+        let iframeResp = await req(iframeUrl, { headers: headers });
+        let iframeHtml = iframeResp.content;
+        let iframeM3u8 = iframeHtml.match(/"url":"([^"]+\.m3u8)"/) || iframeHtml.match(/https?:\/\/[^"']+\.m3u8/);
+        if (iframeM3u8) {
+            return JSON.stringify({ parse: 0, url: iframeM3u8[1].replace(/\\/g, ''), header: headers });
+        }
+    }
+
+    return JSON.stringify({ parse: 1, url: playUrl, header: headers });
+}
+
+export default { init, home, homeVod, category, detail, search, play };
