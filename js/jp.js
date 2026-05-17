@@ -12,28 +12,42 @@ function cleanText(str) {
 
 function getList(html) {
     let videos = [];
-    // 使用通用的方式提取所有 detail 链接
-    let pattern = /href="\/detail\/(\d+)"[^>]*>([^<]+)<\/a>\s*<\/h[234]|href="\/detail\/(\d+)"\s+[^>]*title="([^"]+)"|<h[234]\s+[^>]*><a\s+[^>]*href="\/detail\/(\d+)"[^>]*>([^<]+)<\/a>/g;
-    let matches = [...html.matchAll(pattern)];
+    let regex = /<a[^>]*href="\/detail\/(\d+)"[^>]*>([\s\S]*?)<\/a>/g;
+    let match;
     let seen = {};
-    
-    matches.forEach(match => {
-        let id = match[1] || match[3] || match[5];
-        let name = match[2] || match[4] || match[6];
-        let key = id + '-' + name;
-        
-        if (id && name && !seen[key]) {
+
+    while ((match = regex.exec(html)) !== null) {
+        let id = match[1];
+        let block = match[2];
+        let titleMatch = block.match(/<div[^>]*class="[^"]*title[^"]*"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/);
+        if (!titleMatch) titleMatch = block.match(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+        let name = titleMatch ? cleanText(titleMatch[1]) : '';
+        if (!name) continue;
+
+        let pic = '';
+        let picMatch = block.match(/src="([^\"]+\.(?:jpg|png|webp|jpeg))"/);
+        if (picMatch) {
+            pic = picMatch[1];
+            if (pic.startsWith('/')) pic = host + pic;
+        }
+
+        let remark = '';
+        let scoreMatch = block.match(/<div[^>]*class="[^"]*score[^"]*"[^>]*>([^<]+)<\/div>/);
+        if (scoreMatch) remark = cleanText(scoreMatch[1]);
+
+        let key = id + '|' + name;
+        if (!seen[key]) {
             seen[key] = true;
             videos.push({
                 vod_id: id,
-                vod_name: cleanText(name),
-                vod_pic: '',
-                vod_remarks: '',
+                vod_name: name,
+                vod_pic: pic,
+                vod_remarks: remark,
             });
         }
-    });
-    
-    return videos.slice(0, 50);
+    }
+
+    return videos.slice(0, 60);
 }
 
 async function home(filter) {
@@ -80,19 +94,19 @@ async function home(filter) {
 }
 
 async function homeVod() {
-    let resp = await req(host, { 
-        headers: headers,
-        timeout: 5000,
-        redirect: 'follow'
-    });
+    let resp = await req(host + '/vod/show/id/1', { headers: headers });
     let html = resp.content || '';
     return JSON.stringify({ list: getList(html) });
 }
 
 async function category(tid, pg, filter, extend) {
     let p = pg || 1;
-    let targetId = (extend && extend.class) ? extend.class : tid;
-    let url = host + '/type/' + targetId;
+    let url = host + '/vod/show/id/' + tid;
+    if (extend && extend.class) {
+        url += '/class/' + encodeURIComponent(extend.class);
+    } else if (extend && extend.type) {
+        url += '/type/' + encodeURIComponent(extend.type);
+    }
     if (parseInt(p) > 1) url += '/page/' + p;
     let resp = await req(url, { headers: headers });
     return JSON.stringify({ list: getList(resp.content), page: parseInt(p) });
@@ -101,27 +115,27 @@ async function category(tid, pg, filter, extend) {
 async function detail(id) {
     let url = host + '/detail/' + id;
     let resp = await req(url, { headers: headers });
-    let html = resp.content;
+    let html = resp.content || '';
 
-    let name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/) || ['', ''])[1];
-    let pic = (html.match(/data-original="([^"]+)"/) || html.match(/<img[^>]+src="([^"]+)"/)) || ['', ''];
-    pic = pic[1] || '';
+    let name = (html.match(/<h1[^>]*class="title_name"[^>]*>([^<]+)<\/h1>/) || html.match(/<title>([^<]+)<\/title>/) || ['', ''])[1];
+    let pic = (html.match(/<meta property="og:image" content="([^"]+)"/) || ['', ''])[1] || '';
     if (pic && pic.startsWith('/')) pic = host + pic;
 
-    let content = cleanText((html.match(/class="[^"]*content[^"]*"[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/) || 
-        html.match(/<meta name="description" content="([^"]*)"/) || ['', ''])[1]);
+    let content = cleanText((html.match(/<meta name="description" content="([^"]*)"/) || ['', ''])[1]);
 
-    let playFrom = pdfa(html, '.myui-content__list,.tab-pane').map(it => 
-        (it.match(/<h3[^>]*>([^<]+)<\/h3>/) || it.match(/<span[^>]*>([^<]+)<\/span>/) || ['', '线路'])[1]
-    ).join('$$$');
-
-    let playUrl = pdfa(html, '.myui-content__list,.tab-pane').map(list => 
-        pdfa(list, 'a').map(a => {
-            let n = (a.match(/<span[^>]*>([^<]+)<\/span>/) || ['', '播放'])[1];
-            let v = a.match(/href="\/vod\/play\/(\d+)\/sid\/(\d+)"/);
-            return n + '$' + (v ? (v[1] + '/' + v[2]) : '');
-        }).filter(x => x.split('$')[1]).join('#')
-    ).filter(x => x).join('$$$');
+    let playUrls = [];
+    let seenPlay = {};
+    let playRegex = /href="\/vod\/play\/(\d+\/\d+\/\d+)"/g;
+    let playMatch;
+    while ((playMatch = playRegex.exec(html)) !== null) {
+        let value = playMatch[1];
+        if (!seenPlay[value]) {
+            seenPlay[value] = true;
+            let parts = value.split('/');
+            let episode = parts[1] || '1';
+            playUrls.push('第' + episode + '集$' + value);
+        }
+    }
 
     return JSON.stringify({
         list: [{
@@ -129,15 +143,15 @@ async function detail(id) {
             vod_name: cleanText(name),
             vod_pic: pic,
             vod_content: content,
-            vod_play_from: playFrom || '播放',
-            vod_play_url: playUrl,
+            vod_play_from: '播放',
+            vod_play_url: playUrls.join('#'),
         }],
     });
 }
 
 async function search(wd, quick, pg) {
     let p = pg || 1;
-    let url = host + '/search/wd/' + encodeURIComponent(wd);
+    let url = host + '/vod/search/' + encodeURIComponent(wd);
     if (parseInt(p) > 1) url += '/page/' + p;
     let resp = await req(url, { headers: headers });
     return JSON.stringify({ list: getList(resp.content) });
@@ -145,20 +159,14 @@ async function search(wd, quick, pg) {
 
 async function play(flag, id, flags) {
     let parts = id.split('/');
-    let vid = parts[0];
-    let sid = parts[1] || '1';
-    let url = host + '/vod/play/' + vid + '/sid/' + sid;
-    let resp = await req(url, { headers: headers });
-    
-    let m3u8 = resp.content.match(/"url":"([^"]+\.m3u8)"/);
-    if (m3u8) return JSON.stringify({ parse: 0, url: m3u8[1].replace(/\\/g, ''), header: headers });
-    
-    let m3u8b = resp.content.match(/https?:\/\/[^"']+\.m3u8/);
-    if (m3u8b) return JSON.stringify({ parse: 0, url: m3u8b[0], header: headers });
-    
-    let iframe = resp.content.match(/<iframe[^>]+src="([^"]+)"/);
-    if (iframe) return JSON.stringify({ parse: 1, url: iframe[1], header: headers });
-    
+    let url;
+    if (parts.length >= 3) {
+        url = host + '/vod/play/' + parts.join('/');
+    } else if (parts.length === 2) {
+        url = host + '/vod/play/' + parts[0] + '/1/' + parts[1];
+    } else {
+        url = host + '/vod/play/' + id;
+    }
     return JSON.stringify({ parse: 1, url: url, header: headers });
 }
 
