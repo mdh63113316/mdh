@@ -32,14 +32,14 @@
   ],
   "sites": [
       {
-      "key": "acsux111",
-      "name": "🥇acsux111",
+      "key": "acsux影视",
+      "name": "🥇acsux影视",
       "type": 3,
       "api": "https://mdh.dpdns.org/js/acsux.js"
     },
     {
-        "key": "永乐222",
-        "name": "🥇永乐｜影视222",
+        "key": "永乐",
+        "name": "🥇永乐｜影视",
         "type": 3,
         "api": "https://mdh.dpdns.org/js/yl.js"
     }
