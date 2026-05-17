@@ -65,53 +65,17 @@
   ],
   "ijk": {
     "soft": [
-      {
-        "name": "opensles",
-        "value": "0",
-        "category": 1
-      },
-      {
-        "name": "overlay-format",
-        "value": "2",
-        "category": 1
-      },
-      {
-        "name": "framedrop",
-        "value": "1",
-        "category": 4
-      },
-      {
-        "name": "soundtouch",
-        "value": "1",
-        "category": 4
-      },
-      {
-        "name": "mediacodec",
-        "value": "0",
-        "category": 2
-      }
+      { "name": "opensles", "value": "0", "category": 1 },
+      { "name": "overlay-format", "value": "1", "category": 1 },  // 改 SurfaceView
+      { "name": "framedrop", "value": "0", "category": 4 },       // 关掉丢帧，减少CPU负载
+      { "name": "soundtouch", "value": "0", "category": 4 },      // 关掉音调处理
+      { "name": "mediacodec", "value": "0", "category": 2 }
     ],
     "hard": [
-      {
-        "name": "opensles",
-        "value": "0",
-        "category": 1
-      },
-      {
-        "name": "overlay-format",
-        "value": "2",
-        "category": 1
-      },
-      {
-        "name": "mediacodec",
-        "value": "1",
-        "category": 2
-      },
-      {
-        "name": "mediacodec-hevc",
-        "value": "1",
-        "category": 2
-      }
+      { "name": "opensles", "value": "0", "category": 1 },
+      { "name": "overlay-format", "value": "1", "category": 1 },  // 改 SurfaceView
+      { "name": "mediacodec", "value": "1", "category": 2 },
+      { "name": "mediacodec-hevc", "value": "0", "category": 2 }  // 先关闭HEVC硬解
     ]
   }
 }
