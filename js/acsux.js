@@ -1,4 +1,4 @@
-// 网站配置
+// 网站基础配置
 var host = 'https://acsux.cn';
 var headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -7,7 +7,7 @@ var headers = {
 };
 
 /**
- * 请求函数（带超时和重试）
+ * 网络请求（带超时和重试）
  */
 async function req(url, options = {}, timeout = 8000, retry = 2) {
     for (var i = 0; i <= retry; i++) {
@@ -16,7 +16,7 @@ async function req(url, options = {}, timeout = 8000, retry = 2) {
             var timeoutId = setTimeout(() => controller.abort(), timeout);
             var res = await fetch(url, { ...options, signal: controller.signal });
             clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             var content = await res.text();
             return { content: content, statusCode: res.status };
         } catch (e) {
@@ -27,23 +27,23 @@ async function req(url, options = {}, timeout = 8000, retry = 2) {
 }
 
 /**
- * 从首页/分类页/搜索页的 HTML 中提取视频列表
- * 根据你提供的真实结构编写
+ * 从首页/分类页/搜索页的HTML中提取视频列表
+ * 根据真实结构：<a class="module-poster-item module-item" href="/dt/数字.html" title="标题">
  */
 function getList(html) {
     var videos = [];
-    // 匹配 <a class="module-poster-item module-item" href="/dt/数字.html" title="标题">
+    // 匹配视频项
     var reg = /<a[^>]+class="module-poster-item module-item"[^>]+href="\/dt\/(\d+)\.html"[^>]+title="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
     var match;
     while ((match = reg.exec(html))) {
         var id = match[1];
         var title = match[2];
         var block = match[3];
-        // 提取图片
+        // 图片
         var pic = '';
         var picMatch = /data-original="([^"]+)"/.exec(block);
         if (picMatch) pic = picMatch[1];
-        // 提取备注（集数）
+        // 备注（集数）
         var note = '';
         var noteMatch = /<div class="module-item-note">([^<]+)<\/div>/.exec(block);
         if (noteMatch) note = noteMatch[1];
@@ -54,27 +54,14 @@ function getList(html) {
             vod_remarks: note
         });
     }
-    // 如果没匹配到（可能是搜索页结构略有不同），尝试备用匹配
-    if (videos.length === 0) {
-        var altReg = /<a[^>]+href="\/dt\/(\d+)\.html"[^>]*>[\s\S]*?<img[^>]+alt="([^"]+)"[^>]*>[\s\S]*?<\/a>/gi;
-        while ((match = altReg.exec(html))) {
-            videos.push({
-                vod_id: match[1],
-                vod_name: match[2],
-                vod_pic: '',
-                vod_remarks: ''
-            });
-        }
-    }
     return videos;
 }
 
 /**
- * 从详情页 HTML 中提取 m3u8 播放地址
- * 根据你提供的 player_aaaa 对象编写
+ * 从播放页面（/play/xxx.html）中提取真实的m3u8地址
+ * 播放页中会有 <script>var player_aaaa={"url":"https://...m3u8",...}</script>
  */
-function getPlayUrl(html) {
-    // 匹配 var player_aaaa = {"flag":"play", ..., "url":"https://...m3u8", ...}
+function getM3u8FromPlayPage(html) {
     var reg = /var player_aaaa\s*=\s*({[\s\S]*?});/;
     var match = reg.exec(html);
     if (match) {
@@ -89,6 +76,73 @@ function getPlayUrl(html) {
     var m3u8Match = html.match(/https?:\/\/[^"'\s>]+\.m3u8/);
     if (m3u8Match) return m3u8Match[0];
     return '';
+}
+
+/**
+ * 从详情页HTML中提取所有播放源和集数列表
+ * 返回 { playFrom: "源1$$$源2", playUrl: "源1的集数字符串#...#$$$源2的集数字符串" }
+ */
+function extractPlayList(html, vodId) {
+    var sources = [];
+    // 匹配每个播放源区块：<div class="module-tab-item tab-item" data-dropdown-value="优质"><span>优质</span><small>7</small></div>
+    var sourceReg = /<div class="module-tab-item tab-item"[^>]*data-dropdown-value="([^"]+)">[\s\S]*?<span>([^<]+)<\/span>/g;
+    var sourceMatch;
+    var sourceNames = [];
+    while ((sourceMatch = sourceReg.exec(html))) {
+        var sourceKey = sourceMatch[1];   // 如 "优质" 或 "红牛"
+        var sourceName = sourceMatch[2];  // 同上
+        sourceNames.push({ key: sourceKey, name: sourceName });
+    }
+    // 如果没有找到源，尝试从播放列表面板中提取
+    if (sourceNames.length === 0) {
+        // 默认有一个源叫“播放”
+        sourceNames.push({ key: 'default', name: '播放' });
+    }
+    // 对于每个源，找到对应的集数列表
+    for (var si = 0; si < sourceNames.length; si++) {
+        var src = sourceNames[si];
+        var episodes = [];
+        // 集数链接格式：onclick="location.replace('/play/447434-1-1.html')"
+        // 源索引：优质对应1，红牛对应2（从HTML看，优质源的集数链接中有 -1-，红牛有 -2-）
+        // 我们需要匹配所有集数链接，但只保留属于当前源的
+        var epReg = /onclick="location\.replace\('\/play\/(\d+-\d+-\d+)\.html'\)"[^>]*>[\s\S]*?<span>([^<]+)<\/span>/g;
+        var epMatch;
+        while ((epMatch = epReg.exec(html))) {
+            var playId = epMatch[1];      // 例如 "447434-1-1"
+            var epName = epMatch[2];      // 例如 "第01集"
+            // 判断该集属于哪个源：playId 格式为 vodId-sourceIndex-epIndex
+            var parts = playId.split('-');
+            if (parts.length >= 2) {
+                var sourceIdx = parseInt(parts[1], 10);
+                // 源索引：优质对应1，红牛对应2（按出现顺序）
+                if (sourceIdx === si + 1) {
+                    episodes.push(epName + '$' + playId);
+                }
+            } else {
+                // 容错：如果无法区分，都加到第一个源
+                if (si === 0) episodes.push(epName + '$' + playId);
+            }
+        }
+        if (episodes.length > 0) {
+            sources.push({
+                name: src.name,
+                url: episodes.join('#')
+            });
+        }
+    }
+    // 如果还是没有提取到任何集数，尝试直接获取单集（从立即播放按钮）
+    if (sources.length === 0) {
+        var directPlay = html.match(/location\.replace\('\/play\/([^']+)\.html'\)/);
+        if (directPlay) {
+            sources.push({
+                name: '播放',
+                url: '播放$' + directPlay[1]
+            });
+        }
+    }
+    var playFrom = sources.map(s => s.name).join('$$$');
+    var playUrl = sources.map(s => s.url).join('$$$');
+    return { playFrom: playFrom, playUrl: playUrl };
 }
 
 // ======================== TVBox 标准接口 ========================
@@ -114,8 +168,6 @@ async function homeVod() {
 
 async function category(tid, pg) {
     var page = pg || 1;
-    // 根据你提供的分类页 URL 示例：/cp/1.html (剧集), /cp/2.html (电影)
-    // 分页格式：/cp/1/page/2.html
     var url = host + '/cp/' + tid + (page > 1 ? '/page/' + page + '.html' : '.html');
     var resp = await req(url, { headers: headers });
     var list = getList(resp.content);
@@ -126,7 +178,7 @@ async function detail(id) {
     var url = host + '/dt/' + id + '.html';
     var resp = await req(url, { headers: headers });
     var html = resp.content;
-    // 提取视频名称
+    // 提取名称
     var name = '';
     var nameMatch = html.match(/<h1>([^<]+)<\/h1>/);
     if (nameMatch) name = nameMatch[1];
@@ -138,46 +190,38 @@ async function detail(id) {
     var content = '';
     var contentMatch = html.match(/<meta name="description" content="([^"]+)"/);
     if (contentMatch) content = contentMatch[1];
-    // 提取播放地址（直接获取 m3u8）
-    var playUrl = getPlayUrl(html);
-    var playFrom = '直链';
-    var playUrlStr = '';
-    if (playUrl) {
-        playUrlStr = '播放$' + playUrl;
-    } else {
-        // 如果没有直接 m3u8，则尝试获取播放页面地址（但该站一般直接有 m3u8）
-        playUrlStr = '';
-    }
+    // 提取播放列表
+    var playlist = extractPlayList(html, id);
     return JSON.stringify({
         list: [{
             vod_id: id,
             vod_name: name,
             vod_pic: pic.startsWith('http') ? pic : (pic ? host + pic : ''),
             vod_content: content,
-            vod_play_from: playFrom,
-            vod_play_url: playUrlStr
+            vod_play_from: playlist.playFrom,
+            vod_play_url: playlist.playUrl
         }]
     });
 }
 
 async function play(flag, id, flags) {
-    // 这里 id 实际上已经是 m3u8 链接（因为 detail 里直接给了）
+    // id 格式可能是 "447434-1-1" 或直接 m3u8 链接
     if (id && id.startsWith('http')) {
         return JSON.stringify({ parse: 0, url: id, header: headers });
     }
-    // 如果 id 不是链接，则当作播放页 ID 处理
-    var url = host + '/play/' + id;
-    var resp = await req(url, { headers: headers });
-    var playUrl = getPlayUrl(resp.content);
-    if (playUrl) {
-        return JSON.stringify({ parse: 0, url: playUrl, header: headers });
+    // 否则当作播放页面ID处理
+    var playUrl = host + '/play/' + id + '.html';
+    var resp = await req(playUrl, { headers: headers });
+    var m3u8 = getM3u8FromPlayPage(resp.content);
+    if (m3u8) {
+        return JSON.stringify({ parse: 0, url: m3u8, header: headers });
     }
-    return JSON.stringify({ parse: 1, url: url, header: headers });
+    // 如果没找到，返回播放页地址交给外部解析器
+    return JSON.stringify({ parse: 1, url: playUrl, header: headers });
 }
 
 async function search(wd, quick, pg) {
     var page = pg || 1;
-    // 搜索 URL 格式：/search/关键词-------------.html
     var searchUrl = host + '/search/' + encodeURIComponent(wd) + '-------------.html';
     if (page > 1) searchUrl = host + '/search/' + encodeURIComponent(wd) + '-------------.html/page/' + page + '.html';
     var resp = await req(searchUrl, { headers: headers });
