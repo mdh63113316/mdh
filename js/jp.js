@@ -42,20 +42,25 @@ function getPicFromAnchor(it) {
 
 function getList(html) {
     let videos = [];
-    let items = pdfa(html, 'a');
+    let items = html.match(/<div class="hover-card__Content-sc-ab4ff6e3-0 kShZro">[\s\S]*?<div class="hover-card__VideoInfo-sc-ab4ff6e3-3 eLRHGm video-info">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g) || [];
+    if (!items.length) {
+        items = pdfa(html, 'a');
+    }
     let seen = {};
     items.forEach(it => {
         let idMatch = it.match(/href="\/detail\/(\d+)"/);
         if (!idMatch) return;
 
-        let titleMatch = it.match(/<div[^>]*class="[^"]*title[^"]*"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/) || it.match(/<span>([^<]*[^\s<][^<]*)<\/span>/);
-        if (!titleMatch) return;
-
-        let name = cleanText(titleMatch[1]);
+        let titleMatch = it.match(/<div[^>]*class="[^"]*\btitle\b[^"]*"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/);
+        let name = titleMatch ? cleanText(titleMatch[1]) : '';
+        if (!name) {
+            let altMatch = it.match(/<img[^>]*alt="([^"]+)"/i);
+            if (altMatch) name = cleanText(altMatch[1]);
+        }
         if (!name) return;
 
         let pic = getPicFromAnchor(it);
-        let scoreMatch = it.match(/<div[^>]*class="[^"]*score[^"]*"[^>]*>([^<]+)<\/div>/);
+        let scoreMatch = it.match(/<div[^>]*class="[^"]*\bscore\b[^"]*"[^>]*>([^<]+)<\/div>/);
         let remark = scoreMatch ? cleanText(scoreMatch[1]) : '';
 
         let id = idMatch[1];
@@ -78,8 +83,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '电视剧' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '电视剧1' },
             { type_id: '3', type_name: '综艺' },
             { type_id: '4', type_name: '动漫' },
         ],
