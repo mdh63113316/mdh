@@ -12,18 +12,18 @@ function cleanText(str) {
 
 function resolveImageUrl(url) {
     if (!url) return '';
-    if (url.startsWith('/_next/image')) {
+    if (url.includes('/_next/image')) {
         let u = url.match(/url=([^&]+)/);
         if (u) return decodeURIComponent(u[1]);
-        return host + url;
     }
+    if (url.startsWith('//')) return 'https:' + url;
     if (url.startsWith('/')) return host + url;
     return url;
 }
 
 function getPicFromAnchor(it) {
     let pic = '';
-    let srcSetMatch = it.match(/srcSet="([^"]+)"/);
+    let srcSetMatch = it.match(/(?:srcSet|srcset|data-srcset|data-lazy-srcset)=['"]([^'"]+)['"]/i);
     if (srcSetMatch) {
         let urls = srcSetMatch[1].split(',').map(i => i.trim().split(' ')[0]);
         for (let candidate of urls.reverse()) {
@@ -34,7 +34,7 @@ function getPicFromAnchor(it) {
         }
     }
     if (!pic) {
-        let picMatch = it.match(/src="([^"]+)"/);
+        let picMatch = it.match(/(?:src|data-src|data-lazy-src|data-original)=['"]([^'"]+)['"]/i);
         if (picMatch) pic = resolveImageUrl(picMatch[1]);
     }
     return pic;
@@ -78,8 +78,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影1' },
-            { type_id: '2', type_name: '电视剧1' },
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '电视剧' },
             { type_id: '3', type_name: '综艺' },
             { type_id: '4', type_name: '动漫' },
         ],
@@ -159,8 +159,50 @@ async function detail(id) {
 
     let playUrls = [];
     let seenPlay = {};
-    let episodeJson = (html.match(/"episodeList"\s*:\s*(\[[\s\S]*?\])/m) || ['', ''])[1];
+    let episodeJson = '';
+
+    let listIndex = html.indexOf('episodeList');
+    if (listIndex >= 0) {
+        let arrStart = html.indexOf('[', listIndex);
+        if (arrStart >= 0) {
+            let depth = 0;
+            let inString = false;
+            let quoteChar = '';
+            let escapeNext = false;
+            for (let i = arrStart; i < html.length; i++) {
+                let ch = html[i];
+                if (escapeNext) {
+                    escapeNext = false;
+                    continue;
+                }
+                if (ch === '\\') {
+                    escapeNext = true;
+                    continue;
+                }
+                if (inString) {
+                    if (ch === quoteChar) inString = false;
+                    continue;
+                }
+                if (ch === '"' || ch === "'") {
+                    inString = true;
+                    quoteChar = ch;
+                    continue;
+                }
+                if (ch === '[') depth++;
+                if (ch === ']') {
+                    depth--;
+                    if (depth === 0) {
+                        episodeJson = html.slice(arrStart, i + 1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     if (episodeJson) {
+        episodeJson = episodeJson.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+        episodeJson = episodeJson.replace(/([{,\s])([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
         try {
             let episodes = JSON.parse(episodeJson);
             episodes.forEach(ep => {
