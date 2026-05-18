@@ -12,34 +12,39 @@ function cleanText(str) {
 
 function getList(html) {
     let videos = [];
-    let items = pdfa(html, 'a[href*="/detail/"]');
+    let items = pdfa(html, 'a');
     let seen = {};
     items.forEach(it => {
         let idMatch = it.match(/href="\/detail\/(\d+)"/);
-        let titleMatch = it.match(/<div[^>]*class="[^"]*title[^"]*"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/) || it.match(/<span[^>]*class="title"[^>]*>([^<]+)<\/span>/);
-        let picMatch = it.match(/src="([^\"]+\.(?:jpg|png|webp|jpeg))"/);
-        let scoreMatch = it.match(/<div[^>]*class="[^"]*score[^"]*"[^>]*>([^<]+)<\/div>/);
+        if (!idMatch) return;
         
-        if (idMatch && titleMatch) {
-            let id = idMatch[1];
-            let name = cleanText(titleMatch[1]);
-            let pic = '';
-            if (picMatch) {
-                pic = picMatch[1];
-                if (pic.startsWith('/')) pic = host + pic;
-            }
-            let remark = scoreMatch ? cleanText(scoreMatch[1]) : '';
-            let key = id + '|' + name;
-            
-            if (!seen[key]) {
-                seen[key] = true;
-                videos.push({
-                    vod_id: id,
-                    vod_name: name,
-                    vod_pic: pic,
-                    vod_remarks: remark,
-                });
-            }
+        let titleMatch = it.match(/<span>([^<]*[^\s<][^<]*)<\/span>/);
+        if (!titleMatch) return;
+        
+        let name = cleanText(titleMatch[1]);
+        if (!name) return;
+        
+        let pic = '';
+        let picMatch = it.match(/src="([^"]+\.(?:jpg|png|webp|jpeg))"/);
+        if (picMatch) {
+            pic = picMatch[1];
+            if (pic.startsWith('/')) pic = host + pic;
+        }
+        
+        let scoreMatch = it.match(/>([0-9.]+)<\/div>/);
+        let remark = scoreMatch ? cleanText(scoreMatch[1]) : '';
+        
+        let id = idMatch[1];
+        let key = id + '|' + name;
+        
+        if (!seen[key]) {
+            seen[key] = true;
+            videos.push({
+                vod_id: id,
+                vod_name: name,
+                vod_pic: pic,
+                vod_remarks: remark,
+            });
         }
     });
     return videos.slice(0, 60);
@@ -48,8 +53,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '电视剧' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '电视剧1' },
             { type_id: '3', type_name: '综艺' },
             { type_id: '4', type_name: '动漫' },
         ],
@@ -112,16 +117,16 @@ async function detail(id) {
     let resp = await req(url, { headers: headers });
     let html = resp.content || '';
 
-    let name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/) || ['', ''])[1];
+    let name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/) || html.match(/<title>([^<]+)<\/title>/) || ['', ''])[1];
     let pic = (html.match(/<meta property="og:image" content="([^"]+)"/) || ['', ''])[1] || '';
     if (pic && pic.startsWith('/')) pic = host + pic;
 
-    let content = cleanText((html.match(/<meta name="description" content="([^"]*)"/) || ['', ''])[1]);
+    let content = cleanText((html.match(/<meta name="description" content="([^"]*)"/) || html.match(/<h1[^>]*>([^<]+)<\/h1>/) || ['', ''])[1]);
 
     let playUrls = [];
     let seenPlay = {};
-    let playLinks = pdfa(html, 'a[href*="/vod/play/"]');
-    playLinks.forEach(link => {
+    let playItems = pdfa(html, 'a');
+    playItems.forEach(link => {
         let m = link.match(/href="\/vod\/play\/(\d+\/\d+\/\d+)"/);
         if (m && !seenPlay[m[1]]) {
             seenPlay[m[1]] = true;
