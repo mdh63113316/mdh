@@ -25,10 +25,24 @@ function getList(html) {
         if (!name) return;
         
         let pic = '';
-        let picMatch = it.match(/src="([^"]+\.(?:jpg|png|webp|jpeg))"/);
-        if (picMatch) {
-            pic = picMatch[1];
-            if (pic.startsWith('/')) pic = host + pic;
+        let srcSetMatch = it.match(/srcSet="([^"]+)"/);
+        if (srcSetMatch) {
+            let urls = srcSetMatch[1].split(',');
+            let lastUrl = urls[urls.length - 1].trim().split(' ')[0];
+            if (lastUrl.includes('https://obs')) {
+                pic = lastUrl;
+            } else {
+                let urlMatch = srcSetMatch[1].match(/(https:\/\/[^\s"]+\.(?:jpg|png|webp|jpeg))/);
+                if (urlMatch) pic = urlMatch[1];
+            }
+        }
+        if (!pic) {
+            let picMatch = it.match(/src="(https:\/\/[^"]+\.(?:jpg|png|webp|jpeg))"/);
+            if (picMatch) pic = picMatch[1];
+        }
+        if (!pic) {
+            let picMatch = it.match(/src="(\/[^"]+\.(?:jpg|png|webp|jpeg))"/);
+            if (picMatch) pic = host + picMatch[1];
         }
         
         let scoreMatch = it.match(/>([0-9.]+)<\/div>/);
@@ -53,8 +67,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影1' },
-            { type_id: '2', type_name: '电视剧1' },
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '电视剧' },
             { type_id: '3', type_name: '综艺' },
             { type_id: '4', type_name: '动漫' },
         ],
@@ -118,7 +132,16 @@ async function detail(id) {
     let html = resp.content || '';
 
     let name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/) || html.match(/<title>([^<]+)<\/title>/) || ['', ''])[1];
-    let pic = (html.match(/<meta property="og:image" content="([^"]+)"/) || ['', ''])[1] || '';
+    
+    let pic = '';
+    let ogImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/);
+    if (ogImageMatch) {
+        pic = ogImageMatch[1];
+        if (pic.includes('/_next/image')) {
+            let urlParam = pic.match(/url=([^&]+)/);
+            if (urlParam) pic = decodeURIComponent(urlParam[1]);
+        }
+    }
     if (pic && pic.startsWith('/')) pic = host + pic;
 
     let content = cleanText((html.match(/<meta name="description" content="([^"]*)"/) || html.match(/<h1[^>]*>([^<]+)<\/h1>/) || ['', ''])[1]);
@@ -132,7 +155,8 @@ async function detail(id) {
             seenPlay[m[1]] = true;
             let parts = m[1].split('/');
             let episode = parts[1] || '1';
-            playUrls.push('第' + episode + '集$' + m[1]);
+            let sid = parts[2];
+            playUrls.push('第' + episode + '集$' + parts[0] + '/' + episode + '/' + sid);
         }
     });
 
