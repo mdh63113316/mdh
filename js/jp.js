@@ -10,6 +10,36 @@ function cleanText(str) {
     return String(str || '').replace(/<.*?>/g, '').replace(/\s+/g, ' ').trim();
 }
 
+function resolveImageUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('/_next/image')) {
+        let u = url.match(/url=([^&]+)/);
+        if (u) return decodeURIComponent(u[1]);
+        return host + url;
+    }
+    if (url.startsWith('/')) return host + url;
+    return url;
+}
+
+function getPicFromAnchor(it) {
+    let pic = '';
+    let srcSetMatch = it.match(/srcSet="([^"]+)"/);
+    if (srcSetMatch) {
+        let urls = srcSetMatch[1].split(',').map(i => i.trim().split(' ')[0]);
+        for (let candidate of urls.reverse()) {
+            if (candidate) {
+                pic = resolveImageUrl(candidate);
+                if (pic) break;
+            }
+        }
+    }
+    if (!pic) {
+        let picMatch = it.match(/src="([^"]+)"/);
+        if (picMatch) pic = resolveImageUrl(picMatch[1]);
+    }
+    return pic;
+}
+
 function getList(html) {
     let videos = [];
     let items = pdfa(html, 'a');
@@ -17,40 +47,20 @@ function getList(html) {
     items.forEach(it => {
         let idMatch = it.match(/href="\/detail\/(\d+)"/);
         if (!idMatch) return;
-        
-        let titleMatch = it.match(/<span>([^<]*[^\s<][^<]*)<\/span>/);
+
+        let titleMatch = it.match(/<div[^>]*class="[^"]*title[^"]*"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/) || it.match(/<span>([^<]*[^\s<][^<]*)<\/span>/);
         if (!titleMatch) return;
-        
+
         let name = cleanText(titleMatch[1]);
         if (!name) return;
-        
-        let pic = '';
-        let srcSetMatch = it.match(/srcSet="([^"]+)"/);
-        if (srcSetMatch) {
-            let urls = srcSetMatch[1].split(',');
-            let lastUrl = urls[urls.length - 1].trim().split(' ')[0];
-            if (lastUrl.includes('https://obs')) {
-                pic = lastUrl;
-            } else {
-                let urlMatch = srcSetMatch[1].match(/(https:\/\/[^\s"]+\.(?:jpg|png|webp|jpeg))/);
-                if (urlMatch) pic = urlMatch[1];
-            }
-        }
-        if (!pic) {
-            let picMatch = it.match(/src="(https:\/\/[^"]+\.(?:jpg|png|webp|jpeg))"/);
-            if (picMatch) pic = picMatch[1];
-        }
-        if (!pic) {
-            let picMatch = it.match(/src="(\/[^"]+\.(?:jpg|png|webp|jpeg))"/);
-            if (picMatch) pic = host + picMatch[1];
-        }
-        
-        let scoreMatch = it.match(/>([0-9.]+)<\/div>/);
+
+        let pic = getPicFromAnchor(it);
+        let scoreMatch = it.match(/<div[^>]*class="[^"]*score[^"]*"[^>]*>([^<]+)<\/div>/);
         let remark = scoreMatch ? cleanText(scoreMatch[1]) : '';
-        
+
         let id = idMatch[1];
         let key = id + '|' + name;
-        
+
         if (!seen[key]) {
             seen[key] = true;
             videos.push({
@@ -64,11 +74,12 @@ function getList(html) {
     return videos.slice(0, 60);
 }
 
+
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '电视剧' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '电视剧1' },
             { type_id: '3', type_name: '综艺' },
             { type_id: '4', type_name: '动漫' },
         ],
@@ -132,7 +143,7 @@ async function detail(id) {
     let html = resp.content || '';
 
     let name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/) || html.match(/<title>([^<]+)<\/title>/) || ['', ''])[1];
-    
+
     let pic = '';
     let ogImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/);
     if (ogImageMatch) {
@@ -148,17 +159,35 @@ async function detail(id) {
 
     let playUrls = [];
     let seenPlay = {};
-    let playItems = pdfa(html, 'a');
-    playItems.forEach(link => {
-        let m = link.match(/href="\/vod\/play\/(\d+\/\d+\/\d+)"/);
-        if (m && !seenPlay[m[1]]) {
-            seenPlay[m[1]] = true;
-            let parts = m[1].split('/');
-            let episode = parts[1] || '1';
-            let sid = parts[2];
-            playUrls.push('第' + episode + '集$' + parts[0] + '/' + episode + '/' + sid);
-        }
-    });
+    let episodeJson = (html.match(/"episodeList"\s*:\s*(\[[\s\S]*?\])/m) || ['', ''])[1];
+    if (episodeJson) {
+        try {
+            let episodes = JSON.parse(episodeJson);
+            episodes.forEach(ep => {
+                let nid = String(ep.nid || '');
+                let sort = String(ep.sort || '1');
+                let nameText = cleanText(ep.name || ('第' + sort + '集'));
+                let playKey = id + '/' + sort + '/' + nid;
+                if (nid && !seenPlay[playKey]) {
+                    seenPlay[playKey] = true;
+                    playUrls.push(nameText + '$' + playKey);
+                }
+            });
+        } catch (e) {}
+    }
+
+    if (!playUrls.length) {
+        let playItems = pdfa(html, 'a');
+        playItems.forEach(link => {
+            let m = link.match(/href="\/vod\/play\/(\d+\/\d+\/\d+)"/);
+            if (m && !seenPlay[m[1]]) {
+                seenPlay[m[1]] = true;
+                let parts = m[1].split('/');
+                let episode = parts[1] || '1';
+                playUrls.push('第' + episode + '集$' + parts[0] + '/' + episode + '/' + parts[2]);
+            }
+        });
+    }
 
     return JSON.stringify({
         list: [{
@@ -171,6 +200,7 @@ async function detail(id) {
         }],
     });
 }
+
 
 async function search(wd, quick, pg) {
     let p = pg || 1;
