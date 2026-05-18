@@ -19,6 +19,12 @@
         "name": "🥇金牌｜影视",
         "type": 3,
         "api": "https://mdh.dpdns.org/js/jpys.js"
+    },
+    {
+        "key": "好好看",
+        "name": "🥇好好看｜影视",
+        "type": 3,
+        "api": "https://mdh.dpdns.org/js/hhkan.js"
     }
   ],
   "lives": [],
