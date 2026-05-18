@@ -25,12 +25,14 @@ function getPicFromAnchor(it) {
     let pic = '';
     let srcSetMatch = it.match(/(?:srcSet|srcset|data-srcset|data-lazy-srcset)=['"]([^'"]+)['"]/i);
     if (srcSetMatch) {
-        let urls = srcSetMatch[1].split(',').map(i => i.trim().split(' ')[0]);
-        for (let candidate of urls.reverse()) {
-            if (candidate) {
-                pic = resolveImageUrl(candidate);
-                if (pic) break;
-            }
+        let candidates = srcSetMatch[1].split(',').map(i => i.trim()).map(item => {
+            let parts = item.split(/\s+/);
+            return { url: parts[0], width: parseInt(parts[1], 10) || 0 };
+        }).filter(item => item.url);
+        candidates.sort((a, b) => b.width - a.width);
+        for (let candidate of candidates) {
+            pic = resolveImageUrl(candidate.url);
+            if (pic) break;
         }
     }
     if (!pic) {
@@ -47,15 +49,20 @@ function getList(html) {
         items = pdfa(html, 'a');
     }
     let seen = {};
-    items.forEach(it => {
+    items.forEach(function(it) {
         let idMatch = it.match(/href="\/detail\/(\d+)"/);
         if (!idMatch) return;
 
-        let titleMatch = it.match(/<div[^>]*class="[^"]*\btitle\b[^"]*"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/);
+        let titleMatch = it.match(/<div[^>]*class="[^"]*\btitle\b[^\"]*"[^>]*>([\s\S]*?)<\/div>/i);
         let name = titleMatch ? cleanText(titleMatch[1]) : '';
         if (!name) {
             let altMatch = it.match(/<img[^>]*alt="([^"]+)"/i);
-            if (altMatch) name = cleanText(altMatch[1]);
+            if (altMatch) {
+                let altName = cleanText(altMatch[1]);
+                if (altName && altName.toLowerCase() !== 'error') {
+                    name = altName;
+                }
+            }
         }
         if (!name) return;
 
@@ -83,8 +90,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影1' },
-            { type_id: '2', type_name: '电视剧1' },
+            { type_id: '1', type_name: '电影2' },
+            { type_id: '2', type_name: '电视剧2' },
             { type_id: '3', type_name: '综艺' },
             { type_id: '4', type_name: '动漫' },
         ],
@@ -123,23 +130,33 @@ async function home(filter) {
     });
 }
 
-async function homeVod() {
-    let resp = await req(host + '/vod/show/id/1', { headers: headers });
+function buildCategoryUrl(tid, pg, extend) {
+    let url = host + '/vod/show/id/' + tid;
+    if (extend && extend.class) {
+        url += '/class/' + encodeURIComponent(extend.class);
+    }
+    if (extend && extend.type) {
+        url += '/type/' + encodeURIComponent(extend.type);
+    }
+    let p = parseInt(pg) || 1;
+    if (p > 1) url += '/page/' + p;
+    return url;
+}
+
+async function fetchList(url) {
+    let resp = await req(url, { headers: headers });
     let html = resp.content || '';
     return JSON.stringify({ list: getList(html) });
 }
 
+async function homeVod() {
+    return fetchList(host + '/vod/show/id/1');
+}
+
 async function category(tid, pg, filter, extend) {
-    let p = pg || 1;
-    let url = host + '/vod/show/id/' + tid;
-    if (extend && extend.class) {
-        url += '/class/' + encodeURIComponent(extend.class);
-    } else if (extend && extend.type) {
-        url += '/type/' + encodeURIComponent(extend.type);
-    }
-    if (parseInt(p) > 1) url += '/page/' + p;
-    let resp = await req(url, { headers: headers });
-    return JSON.stringify({ list: getList(resp.content), page: parseInt(p) });
+    let url = buildCategoryUrl(tid, pg, extend);
+    let result = await fetchList(url);
+    return JSON.stringify({ list: JSON.parse(result).list, page: parseInt(pg) || 1 });
 }
 
 async function detail(id) {
