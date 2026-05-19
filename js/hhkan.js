@@ -90,12 +90,43 @@ function getList(html) {
     return videos;
 }
 
+// 补充：如果上面解析没有命中任何结果，尝试基于 /detail/ 链接抽取更多上下文片段
+function getListByDetailLinks(html) {
+    let videos = [];
+    let seen = {};
+    let regex = /(.{0,300}<a[^>]+href=["']\/(?:detail|vod|dt|view)\/[\w-]+\.html[^>]*>[\s\S]*?<\/a>.{0,300})/gi;
+    let m;
+    while ((m = regex.exec(html)) !== null) {
+        let snippet = m[1];
+        let idMatch = snippet.match(/href=["']\/(?:detail|vod|dt|view)\/([\w-]+)\.html/i) || snippet.match(/href=["']([^"']+\.html)["']/i);
+        if (!idMatch) continue;
+        let id = idMatch[1];
+        let nameMatch = snippet.match(/title=["']([^"']+)["']/i)
+            || snippet.match(/alt=["']([^"']+)["']/i)
+            || snippet.match(/<img[^>]*alt=["']([^"']+)["']/i)
+            || snippet.match(/<h3[^>]*>([\s\S]*?)<\/h3>/i)
+            || snippet.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)
+            || snippet.match(/<strong[^>]*>([^<]+)<\/strong>/i)
+            || snippet.match(/>([^<]{2,80})<\//i);
+        let name = nameMatch ? cleanText(nameMatch[1]) : ('id_' + id);
+        if (!name) continue;
+        let pic = getPicFromAnchor(snippet);
+        if (pic && pic.startsWith('/')) pic = host + pic;
+        let key = id + '|' + name;
+        if (!seen[key]) {
+            seen[key] = true;
+            videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
+        }
+    }
+    return videos;
+}
+
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '连续剧' },
-            { type_id: '3', type_name: '动漫' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '连续剧1' },
+            { type_id: '3', type_name: '动漫2' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
         ],
@@ -157,30 +188,8 @@ async function fetchList(url) {
     let html = resp && (resp.content || resp.body || resp) || '';
     let list = getList(html || '');
     if ((!list || !list.length) && html) {
-        // 回退：正则直接抽取含有 /detail/ 或 /play/ 链接的 a 标签
-        let items = html.match(/<a[^>]+href=["']([^"']+(?:\/detail\/|\/play\/|\.html))[^"']*["'][^>]*>[\s\S]*?<\/a>/gi) || [];
-        let seen = {};
-        items.forEach(it => {
-            let hrefM = it.match(/href=["']([^"']+)["']/i);
-            if (!hrefM) return;
-            let href = hrefM[1];
-            if (/^https?:\/\//i.test(href)) {
-                try { href = new URL(href).pathname + (new URL(href).search || ''); } catch (e) {}
-            }
-            let idM = href.match(/\/(?:detail|vod|dt|view)\/(?:.*?)(\d+)\.html/i) || href.match(/(\d+)\.html/);
-            if (!idM) return;
-            let id = idM[1];
-            let nameM = it.match(/title=["']([^"']+)["']/i) || it.match(/alt=["']([^"']+)["']/i) || it.match(/<img[^>]*alt=["']([^"']+)["']/i) || it.match(/<strong[^>]*>([^<]+)<\/strong>/i) || it.match(/>([^<]+)<\/a>/i);
-            let name = nameM ? cleanText(nameM[1]) : ('id_' + id);
-            if (!name) return;
-            let pic = getPicFromAnchor(it);
-            if (pic && pic.startsWith('/')) pic = host + pic;
-            let key = id + '|' + name;
-            if (!seen[key]) {
-                seen[key] = true;
-                list.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
-            }
-        });
+        let more = getListByDetailLinks(html);
+        if (more && more.length) list = list.concat(more);
     }
     return JSON.stringify({ list: list });
 }
