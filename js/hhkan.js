@@ -40,93 +40,62 @@ function getPicFromAnchor(it) {
 
 function getList(html) {
     let videos = [];
-    let items = [];
-    try {
-        items = pdfa(html, ".module-item,.module-card-item,.vodlist .vodlist-ol li,.vodlist li,.vod-list li,a");
-    } catch (e) {
-        items = pdfa(html, 'a') || [];
-    }
-    if (!items || !items.length) items = html.match(/<a[\s\S]*?<\/a>/gi) || [];
-
     let seen = {};
-    items.forEach(it => {
-        let hrefMatch = it.match(/href=["']([^"']+)["']/i);
-        if (!hrefMatch) return;
-        let href = hrefMatch[1];
-
-        // normalize absolute urls to path
-        if (/^https?:\/\//i.test(href)) {
-            try { href = new URL(href).pathname + (new URL(href).search || ''); } catch (e) {}
-        }
-
-        // match various detail/vod url patterns
-        let idMatch = href.match(/\/(?:detail|vod|dt|view)\/([^\/\?&'\"]+)\.html/i)
-            || href.match(/(\d+)\.html/);
-        if (!idMatch) return;
-
-        let id = idMatch[1];
-
-        let nameMatch = it.match(/title=["']([^"']+)["']/i)
-            || it.match(/alt=["']([^"']+)["']/i)
-            || it.match(/<img[^>]*alt=["']([^"']+)["']/i)
-            || it.match(/<strong[^>]*>([^<]+)<\/strong>/i)
-            || it.match(/>([^<]+)<\/a>/i);
-        let name = nameMatch ? cleanText(nameMatch[1]) : '';
-        if (!name) return;
-
-        let pic = getPicFromAnchor(it);
+    
+    // 直接用正则提取包含 /detail/ 或 /vod/ 的链接及其上下文
+    let detailRegex = /<a[^>]*href=["']([^"']*\/(?:detail|vod|view)\/[^"']*?)["'][^>]*>([\s\S]{0,500}?)<\/a>/gi;
+    let match;
+    
+    while ((match = detailRegex.exec(html)) !== null) {
+        let fullLink = match[0];
+        let href = match[1];
+        let innerHtml = match[2];
+        
+        // 提取 ID
+        let idMatch = href.match(/\/(?:detail|vod|view)\/([^\/\?&'\"]+?)(?:|\.html)/i);
+        if (!idMatch) continue;
+        
+        let id = String(idMatch[1]).trim();
+        if (!id || id.length === 0) continue;
+        
+        // 提取标题：优先级 title > alt > strong > img > 文本
+        let name = '';
+        let nameMatch = fullLink.match(/title=["']([^"']+)["']/i)
+            || fullLink.match(/alt=["']([^"']+)["']/i)
+            || fullLink.match(/<img[^>]*alt=["']([^"']+)["']/i)
+            || fullLink.match(/<strong[^>]*>([^<]+)<\/strong>/i)
+            || innerHtml.match(/>([^<]{2,100})</);
+        if (nameMatch) name = cleanText(nameMatch[1]);
+        
+        if (!name || name.length < 2) continue;
+        
+        // 提取图片
+        let pic = getPicFromAnchor(fullLink);
+        if (!pic) pic = getPicFromAnchor(innerHtml);
         if (pic && pic.startsWith('/')) pic = host + pic;
-
-        let remarkMatch = it.match(/<span[^>]*class=["'][^"']*(?:tag|score|info-tag|type|label)[^"']*["'][^>]*>([^<]+)<\/span>/i)
-            || it.match(/<div[^>]*class=["'][^"']*(?:tag|score|info-tag|type|label)[^"']*["'][^>]*>([^<]+)<\/div>/i);
-        let remark = remarkMatch ? cleanText(remarkMatch[1]) : '';
-
+        
+        // 提取备注（评分、标签等）
+        let remark = '';
+        let remarkMatch = fullLink.match(/<span[^>]*class=["'][^"']*(?:score|tag|year|remark|info)[^"']*["'][^>]*>([^<]{1,50})<\/span>/i)
+            || fullLink.match(/<div[^>]*class=["'][^"']*(?:score|tag|year|remark|info)[^"']*["'][^>]*>([^<]{1,50})<\/div>/i);
+        if (remarkMatch) remark = cleanText(remarkMatch[1]);
+        
         let key = id + '|' + name;
         if (!seen[key]) {
             seen[key] = true;
             videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: remark });
         }
-    });
-    return videos;
-}
-
-// 补充：如果上面解析没有命中任何结果，尝试基于 /detail/ 链接抽取更多上下文片段
-function getListByDetailLinks(html) {
-    let videos = [];
-    let seen = {};
-    let regex = /(.{0,300}<a[^>]+href=["']\/(?:detail|vod|dt|view)\/[\w-]+\.html[^>]*>[\s\S]*?<\/a>.{0,300})/gi;
-    let m;
-    while ((m = regex.exec(html)) !== null) {
-        let snippet = m[1];
-        let idMatch = snippet.match(/href=["']\/(?:detail|vod|dt|view)\/([\w-]+)\.html/i) || snippet.match(/href=["']([^"']+\.html)["']/i);
-        if (!idMatch) continue;
-        let id = idMatch[1];
-        let nameMatch = snippet.match(/title=["']([^"']+)["']/i)
-            || snippet.match(/alt=["']([^"']+)["']/i)
-            || snippet.match(/<img[^>]*alt=["']([^"']+)["']/i)
-            || snippet.match(/<h3[^>]*>([\s\S]*?)<\/h3>/i)
-            || snippet.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)
-            || snippet.match(/<strong[^>]*>([^<]+)<\/strong>/i)
-            || snippet.match(/>([^<]{2,80})<\//i);
-        let name = nameMatch ? cleanText(nameMatch[1]) : ('id_' + id);
-        if (!name) continue;
-        let pic = getPicFromAnchor(snippet);
-        if (pic && pic.startsWith('/')) pic = host + pic;
-        let key = id + '|' + name;
-        if (!seen[key]) {
-            seen[key] = true;
-            videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
-        }
     }
+    
     return videos;
 }
 
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影1' },
-            { type_id: '2', type_name: '连续剧1' },
-            { type_id: '3', type_name: '动漫2' },
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '连续剧' },
+            { type_id: '3', type_name: '动漫' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
         ],
@@ -187,10 +156,6 @@ async function fetchList(url) {
     let resp = await req(url, { headers: headers });
     let html = resp && (resp.content || resp.body || resp) || '';
     let list = getList(html || '');
-    if ((!list || !list.length) && html) {
-        let more = getListByDetailLinks(html);
-        if (more && more.length) list = list.concat(more);
-    }
     return JSON.stringify({ list: list });
 }
 
@@ -221,25 +186,39 @@ async function detail(id) {
 
     let playUrls = [];
     let seenPlay = {};
-    let playItems = [];
-    try { playItems = pdfa(html, '.module-play-list-content a, .play-list a, a'); } catch (e) { playItems = pdfa(html, 'a'); }
-    playItems.forEach(link => {
-        let m = link.match(/href=["']([^"']*play[^"']*\.html)["']/i) || link.match(/href=["']([^"']*play[^"']*)["']/i);
-        if (m) {
-            let href = m[1];
-            if (href.startsWith('/')) href = href.replace(/^\//, '');
-            let title = (link.match(/<span[^>]*>([^<]+)<\/span>/i) || link.match(/>([^<]+)<\/a>/i) || ['', '播放'])[1];
-            title = cleanText(title) || '播放';
-            let playId = href.replace(/^play\//, '').replace(/^[\/]*/, '');
-            if (!seenPlay[playId]) {
-                seenPlay[playId] = true;
-                playUrls.push(title + '$' + playId);
-            }
+    
+    // 提取所有可能的播放链接
+    let playRegex = /<a[^>]*href=["']([^"']*\/play\/[^"']*?)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi;
+    let pmatch;
+    while ((pmatch = playRegex.exec(html)) !== null) {
+        let plink = pmatch[1];
+        let ptext = pmatch[2];
+        
+        // 规范化 play 链接 ID
+        let playId = plink.replace(/^.*\/play\//, '').replace(/\.html.*/, '').trim();
+        if (!playId || playId.length === 0) continue;
+        
+        // 提取分集名称（优先从链接文本提取）
+        let episodeName = cleanText(ptext.match(/>([^<]{1,100})</)?.[1] || '播放');
+        if (!episodeName || episodeName.length === 0) episodeName = '播放';
+        
+        if (!seenPlay[playId]) {
+            seenPlay[playId] = true;
+            playUrls.push(episodeName + '$' + playId);
         }
-    });
+    }
+    
+    // 如果没有抽取到任何链接，尝试正则备用方案
     if (!playUrls.length) {
-        let main = html.match(/href="(\/play\/[^"']+\.html)"/i);
-        if (main) playUrls.push('播放$' + main[1].replace(/^\/play\//, ''));
+        let allPlayLinks = html.match(/href=["']([^"']*\/play\/[^"']*?)["']/gi) || [];
+        allPlayLinks.forEach(linkAttr => {
+            let plink = linkAttr.replace(/href=["']/, '').replace(/["']/, '');
+            let playId = plink.replace(/^.*\/play\//, '').replace(/\.html.*/, '').trim();
+            if (playId && !seenPlay[playId]) {
+                seenPlay[playId] = true;
+                playUrls.push('播放$' + playId);
+            }
+        });
     }
 
     return JSON.stringify({
@@ -256,22 +235,29 @@ async function detail(id) {
 
 async function search(wd, quick, pg) {
     let p = pg || 1;
-    // 站点可能存在多种搜索路径，尝试几种常见形式
+    // 尝试多个常见搜索路径
     let candidates = [
         host + '/search/' + encodeURIComponent(wd) + '.html',
-        host + '/s?wd=' + encodeURIComponent(wd),
         host + '/search?q=' + encodeURIComponent(wd),
-        host + '/search/' + encodeURIComponent(wd) + '.html/page/' + p + '.html'
+        host + '/s?wd=' + encodeURIComponent(wd),
     ];
+    if (parseInt(p) > 1) {
+        candidates.push(host + '/search/' + encodeURIComponent(wd) + '/page/' + p + '.html');
+    }
+    
     let html = '';
     for (let url of candidates) {
         try {
             let resp = await req(url, { headers: headers });
             html = resp && (resp.content || resp.body || resp) || '';
-            if (html && html.indexOf('class') !== -1) break; // 简单判断是否为有效页面
+            let list = getList(html);
+            if (list && list.length > 0) {
+                return JSON.stringify({ list: list });
+            }
         } catch (e) {}
     }
-    return JSON.stringify({ list: getList(html) });
+    
+    return JSON.stringify({ list: [] });
 }
 
 async function play(flag, id, flags) {
@@ -283,14 +269,25 @@ async function play(flag, id, flags) {
     }
     let resp = await req(url, { headers: headers });
     let html = resp && (resp.content || resp.body || resp) || '';
-    let m = html.match(/['"](https?:[^'"\s]+\.m3u8[^'"\s]*)['"]/i);
-    if (m) {
-        return JSON.stringify({ parse: 0, url: m[1].replace(/\\/g, ''), header: headers });
+    
+    // 尝试多种 m3u8 提取方式
+    let patterns = [
+        /['"](https?:[^'"\s]+\.m3u8[^'"\s]*)['"]/i,              // "...m3u8..."
+        /source[^>]*src=['"]([^'"\s]+\.m3u8[^'"\s]*)['"]/i,      // <source src="...m3u8...">
+        /url['":]?\s*['"]?([^'"\s,;]+\.m3u8[^'"\s]*)/i,          // url: "...m3u8..."
+        /"url"\s*:\s*"([^"]+\.m3u8[^"]*)"/i,                     // "url":"...m3u8..."
+        /https?:\/\/[^\s'"]*\.m3u8[^\s'"]*(?=[\s'"]|$)/i        // 直接 m3u8 URL
+    ];
+    
+    for (let pattern of patterns) {
+        let m = html.match(pattern);
+        if (m) {
+            let playUrl = m[1];
+            return JSON.stringify({ parse: 0, url: playUrl.replace(/\\/g, ''), header: headers });
+        }
     }
-    let m2 = html.match(/source[^>]*src=['"]([^'"\s]+\.m3u8[^'"\s]*)['"]/i);
-    if (m2) {
-        return JSON.stringify({ parse: 0, url: m2[1].replace(/\\/g, ''), header: headers });
-    }
+    
+    // 未找到直接 URL，返回 parse:1 让 TVBOX 解析
     return JSON.stringify({ parse: 1, url: url, header: headers });
 }
 
