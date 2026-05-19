@@ -40,52 +40,91 @@ function getPicFromAnchor(it) {
 
 function getList(html) {
     let videos = [];
+    let items = [];
     let seen = {};
     
-    // 直接用正则提取包含 /detail/ 或 /vod/ 的链接及其上下文
-    let detailRegex = /<a[^>]*href=["']([^"']*\/(?:detail|vod|view)\/[^"']*?)["'][^>]*>([\s\S]{0,500}?)<\/a>/gi;
-    let match;
+    // 层级 1：尝试智能选择器（module-item, card, vod等）
+    try {
+        items = pdfa(html, ".module-item,.module-card-item,.module-item-pic,.movie-card,.vod-item,.vod-card,.vodlist li,.video-item");
+    } catch (e) {}
     
-    while ((match = detailRegex.exec(html)) !== null) {
-        let fullLink = match[0];
-        let href = match[1];
-        let innerHtml = match[2];
+    // 层级 2：如果层级1失败，用通用的 <a> 选择并过滤
+    if (!items || !items.length) {
+        try {
+            items = pdfa(html, 'a[href*="/detail/"]');
+        } catch (e) {}
+    }
+    
+    // 层级 3：最后回退到所有 <a> 标签
+    if (!items || !items.length) {
+        items = pdfa(html, 'a') || [];
+    }
+    
+    items.forEach(function(it) {
+        // 提取链接
+        let idMatch = it.match(/href=["']([^"']*\/(?:detail|vod|view)\/([^\/\?&'"]+)[^"']*)["']/i);
+        if (!idMatch) {
+            // 备用：寻找任何包含数字的 href
+            let anyMatch = it.match(/href=["']([^"']+)["']/i);
+            if (anyMatch && anyMatch[1].indexOf('html') > -1) {
+                idMatch = anyMatch;
+            } else {
+                return;
+            }
+        }
         
-        // 提取 ID
-        let idMatch = href.match(/\/(?:detail|vod|view)\/([^\/\?&'\"]+?)(?:|\.html)/i);
-        if (!idMatch) continue;
+        let href = idMatch[1];
+        let id = '';
         
-        let id = String(idMatch[1]).trim();
-        if (!id || id.length === 0) continue;
+        // 从 href 提取 ID
+        let detailId = href.match(/\/(?:detail|vod|view)\/([^\/\?&'"]+)/i);
+        if (detailId) {
+            id = detailId[1].split('.')[0]; // 移除 .html 后缀
+        } else {
+            let numId = href.match(/(\d+)/);
+            if (numId) id = numId[1];
+        }
         
-        // 提取标题：优先级 title > alt > strong > img > 文本
+        if (!id) return;
+        
+        // 提取标题
         let name = '';
-        let nameMatch = fullLink.match(/title=["']([^"']+)["']/i)
-            || fullLink.match(/alt=["']([^"']+)["']/i)
-            || fullLink.match(/<img[^>]*alt=["']([^"']+)["']/i)
-            || fullLink.match(/<strong[^>]*>([^<]+)<\/strong>/i)
-            || innerHtml.match(/>([^<]{2,100})</);
-        if (nameMatch) name = cleanText(nameMatch[1]);
+        let titleMatch = it.match(/title=["']([^"']+)["']/i)
+            || it.match(/alt=["']([^"']+)["']/i)
+            || it.match(/<img[^>]*alt=["']([^"']+)["']/i)
+            || it.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i)
+            || it.match(/<strong[^>]*>([^<]+)<\/strong>/i);
         
-        if (!name || name.length < 2) continue;
+        if (titleMatch) name = cleanText(titleMatch[1]);
+        if (!name) {
+            // 从链接文本提取
+            let textMatch = it.match(/>([^<]{2,100})<\/a>/);
+            if (textMatch) name = cleanText(textMatch[1]);
+        }
+        
+        if (!name || name.length < 2) return;
         
         // 提取图片
-        let pic = getPicFromAnchor(fullLink);
-        if (!pic) pic = getPicFromAnchor(innerHtml);
+        let pic = getPicFromAnchor(it);
         if (pic && pic.startsWith('/')) pic = host + pic;
         
-        // 提取备注（评分、标签等）
+        // 提取备注
         let remark = '';
-        let remarkMatch = fullLink.match(/<span[^>]*class=["'][^"']*(?:score|tag|year|remark|info)[^"']*["'][^>]*>([^<]{1,50})<\/span>/i)
-            || fullLink.match(/<div[^>]*class=["'][^"']*(?:score|tag|year|remark|info)[^"']*["'][^>]*>([^<]{1,50})<\/div>/i);
-        if (remarkMatch) remark = cleanText(remarkMatch[1]);
+        let scoreMatch = it.match(/<span[^>]*class=["'][^"']*(?:score|tag|label|year)[^"']*["'][^>]*>([^<]{1,30})<\/span>/i)
+            || it.match(/<div[^>]*class=["'][^"']*(?:score|tag|label|year)[^"']*["'][^>]*>([^<]{1,30})<\/div>/i);
+        if (scoreMatch) remark = cleanText(scoreMatch[1]);
         
         let key = id + '|' + name;
         if (!seen[key]) {
             seen[key] = true;
-            videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: remark });
+            videos.push({
+                vod_id: id,
+                vod_name: name,
+                vod_pic: pic,
+                vod_remarks: remark,
+            });
         }
-    }
+    });
     
     return videos;
 }
@@ -93,9 +132,9 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '连续剧' },
-            { type_id: '3', type_name: '动漫' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '连续剧1' },
+            { type_id: '3', type_name: '动漫2' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
         ],
@@ -155,12 +194,30 @@ function buildCategoryUrl(tid, pg, extend) {
 async function fetchList(url) {
     let resp = await req(url, { headers: headers });
     let html = resp && (resp.content || resp.body || resp) || '';
-    let list = getList(html || '');
+    if (!html) html = '';
+    let list = getList(html);
     return JSON.stringify({ list: list });
 }
 
 async function homeVod() {
-    return fetchList(host);
+    // 尝试常见的首页路径
+    let candidates = [
+        host + '/channel/1.html',
+        host + '/',
+        host + '/index.html'
+    ];
+    
+    for (let url of candidates) {
+        try {
+            let result = await fetchList(url);
+            let data = JSON.parse(result);
+            if (data.list && data.list.length > 0) {
+                return result;
+            }
+        } catch (e) {}
+    }
+    
+    return fetchList(candidates[0]);
 }
 
 async function category(tid, pg, filter, extend) {
@@ -187,32 +244,41 @@ async function detail(id) {
     let playUrls = [];
     let seenPlay = {};
     
-    // 提取所有可能的播放链接
-    let playRegex = /<a[^>]*href=["']([^"']*\/play\/[^"']*?)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi;
-    let pmatch;
-    while ((pmatch = playRegex.exec(html)) !== null) {
-        let plink = pmatch[1];
-        let ptext = pmatch[2];
+    // 用 pdfa 尝试选择播放链接容器
+    let playItems = [];
+    try {
+        playItems = pdfa(html, 'a[href*="/play/"],.module-play-list-content a,.play-list a');
+    } catch (e) {
+        playItems = pdfa(html, 'a') || [];
+    }
+    
+    playItems.forEach(function(link) {
+        let href = link.match(/href=["']([^"']*\/play\/[^"']*)["']/i);
+        if (!href) return;
         
-        // 规范化 play 链接 ID
-        let playId = plink.replace(/^.*\/play\//, '').replace(/\.html.*/, '').trim();
-        if (!playId || playId.length === 0) continue;
+        let playPath = href[1];
+        // 规范化 play ID
+        let playId = playPath.replace(/^.*\/play\//, '').replace(/\.html.*/, '').trim();
+        if (!playId) return;
         
-        // 提取分集名称（优先从链接文本提取）
-        let episodeName = cleanText(ptext.match(/>([^<]{1,100})</)?.[1] || '播放');
-        if (!episodeName || episodeName.length === 0) episodeName = '播放';
+        // 提取分集名
+        let episodeName = '';
+        let nameMatch = link.match(/<span[^>]*>([^<]{1,50})<\/span>/i)
+            || link.match(/>([^<]{1,50})<\/a>/i);
+        if (nameMatch) episodeName = cleanText(nameMatch[1]);
+        if (!episodeName) episodeName = '播放';
         
         if (!seenPlay[playId]) {
             seenPlay[playId] = true;
             playUrls.push(episodeName + '$' + playId);
         }
-    }
+    });
     
-    // 如果没有抽取到任何链接，尝试正则备用方案
+    // 备用：直接正则扫描所有 /play/ 链接
     if (!playUrls.length) {
-        let allPlayLinks = html.match(/href=["']([^"']*\/play\/[^"']*?)["']/gi) || [];
-        allPlayLinks.forEach(linkAttr => {
-            let plink = linkAttr.replace(/href=["']/, '').replace(/["']/, '');
+        let allLinks = html.match(/href=["']([^"']*\/play\/[^"']*?)["']/gi) || [];
+        allLinks.forEach(function(link) {
+            let plink = link.replace(/href=["']/, '').replace(/["'].*/, '');
             let playId = plink.replace(/^.*\/play\//, '').replace(/\.html.*/, '').trim();
             if (playId && !seenPlay[playId]) {
                 seenPlay[playId] = true;
