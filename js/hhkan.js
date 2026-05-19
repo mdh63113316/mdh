@@ -43,88 +43,106 @@ function getList(html) {
     let items = [];
     let seen = {};
     
-    // 层级 1：尝试智能选择器（module-item, card, vod等）
+    if (!html || html.length < 100) {
+        return [];
+    }
+    
+    // ========== 方案1: 用pdfa选择器 ==========
     try {
-        items = pdfa(html, ".module-item,.module-card-item,.module-item-pic,.movie-card,.vod-item,.vod-card,.vodlist li,.video-item");
+        items = pdfa(html, ".module-item,.movie-card,.vod-item,.vod-card,.video-item,li[data-id]");
     } catch (e) {}
     
-    // 层级 2：如果层级1失败，用通用的 <a> 选择并过滤
-    if (!items || !items.length) {
-        try {
-            items = pdfa(html, 'a[href*="/detail/"]');
-        } catch (e) {}
-    }
-    
-    // 层级 3：最后回退到所有 <a> 标签
-    if (!items || !items.length) {
-        items = pdfa(html, 'a') || [];
-    }
-    
-    items.forEach(function(it) {
-        // 提取链接
-        let idMatch = it.match(/href=["']([^"']*\/(?:detail|vod|view)\/([^\/\?&'"]+)[^"']*)["']/i);
-        if (!idMatch) {
-            // 备用：寻找任何包含数字的 href
-            let anyMatch = it.match(/href=["']([^"']+)["']/i);
-            if (anyMatch && anyMatch[1].indexOf('html') > -1) {
-                idMatch = anyMatch;
-            } else {
-                return;
+    if (items && items.length > 0) {
+        items.forEach(function(it) {
+            let idMatch = it.match(/data-id=["']([^"']+)["']|href=["']([^"']*\/(?:detail|vod|view)\/([^\/\?&'"]+)[^"']*)["']/i);
+            if (!idMatch) return;
+            
+            let id = idMatch[1] || idMatch[3];
+            if (!id) return;
+            id = String(id).split('.')[0];
+            if (!id || id.length === 0) return;
+            
+            let titleMatch = it.match(/title=["']([^"']+)["']/i) || it.match(/alt=["']([^"']+)["']/i) || it.match(/>([^<]{2,100})<\/a>/);
+            let name = titleMatch ? cleanText(titleMatch[1]) : '';
+            if (!name || name.length < 2) return;
+            
+            let pic = getPicFromAnchor(it);
+            if (pic && pic.startsWith('/')) pic = host + pic;
+            
+            let key = id + '|' + name;
+            if (!seen[key]) {
+                seen[key] = true;
+                videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
             }
-        }
+        });
         
-        let href = idMatch[1];
-        let id = '';
-        
-        // 从 href 提取 ID
-        let detailId = href.match(/\/(?:detail|vod|view)\/([^\/\?&'"]+)/i);
-        if (detailId) {
-            id = detailId[1].split('.')[0]; // 移除 .html 后缀
-        } else {
-            let numId = href.match(/(\d+)/);
-            if (numId) id = numId[1];
-        }
-        
-        if (!id) return;
+        if (videos.length > 0) return videos;
+    }
+    
+    // ========== 方案2: 纯正则提取 /detail/ 链接 ==========
+    seen = {};
+    let detailRegex = /href=["']([^"']*\/detail\/([^\/\?&'"]+)[^"']*)["'][^>]*>[\s\S]{0,300}?<\/a>/gi;
+    let match;
+    while ((match = detailRegex.exec(html)) !== null) {
+        let fullLink = match[0];
+        let id = String(match[2]).split('.')[0];
+        if (!id || id.length === 0) continue;
         
         // 提取标题
-        let name = '';
-        let titleMatch = it.match(/title=["']([^"']+)["']/i)
-            || it.match(/alt=["']([^"']+)["']/i)
-            || it.match(/<img[^>]*alt=["']([^"']+)["']/i)
-            || it.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i)
-            || it.match(/<strong[^>]*>([^<]+)<\/strong>/i);
+        let titleMatch = fullLink.match(/title=["']([^"']+)["']/i) 
+            || fullLink.match(/alt=["']([^"']+)["']/i)
+            || fullLink.match(/<img[^>]*alt=["']([^"']+)["']/i)
+            || fullLink.match(/>([^<]{2,100})<\/a>/);
+        let name = titleMatch ? cleanText(titleMatch[1]) : '';
+        if (!name || name.length < 2) continue;
         
-        if (titleMatch) name = cleanText(titleMatch[1]);
-        if (!name) {
-            // 从链接文本提取
-            let textMatch = it.match(/>([^<]{2,100})<\/a>/);
-            if (textMatch) name = cleanText(textMatch[1]);
-        }
-        
-        if (!name || name.length < 2) return;
-        
-        // 提取图片
-        let pic = getPicFromAnchor(it);
+        let pic = getPicFromAnchor(fullLink);
         if (pic && pic.startsWith('/')) pic = host + pic;
-        
-        // 提取备注
-        let remark = '';
-        let scoreMatch = it.match(/<span[^>]*class=["'][^"']*(?:score|tag|label|year)[^"']*["'][^>]*>([^<]{1,30})<\/span>/i)
-            || it.match(/<div[^>]*class=["'][^"']*(?:score|tag|label|year)[^"']*["'][^>]*>([^<]{1,30})<\/div>/i);
-        if (scoreMatch) remark = cleanText(scoreMatch[1]);
         
         let key = id + '|' + name;
         if (!seen[key]) {
             seen[key] = true;
-            videos.push({
-                vod_id: id,
-                vod_name: name,
-                vod_pic: pic,
-                vod_remarks: remark,
-            });
+            videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
         }
-    });
+    }
+    
+    if (videos.length > 0) return videos;
+    
+    // ========== 方案3: 最后的救急方案 - 任意 <a> 标签+数字ID ==========
+    seen = {};
+    let allAnchorRegex = /<a[^>]*href=["']([^"']*)["'][^>]*>[\s\S]{0,200}?<\/a>/gi;
+    match = null;
+    while ((match = allAnchorRegex.exec(html)) !== null) {
+        let fullLink = match[0];
+        let href = match[1];
+        
+        // 只要包含数字和 .html 的都可以
+        if (href.indexOf('.html') === -1) continue;
+        
+        let idMatch = href.match(/(\d+)/);
+        if (!idMatch) continue;
+        let id = idMatch[1];
+        
+        // 简单验证：ID 不能太长
+        if (id.length > 10) continue;
+        
+        let titleMatch = fullLink.match(/title=["']([^"']+)["']/i)
+            || fullLink.match(/alt=["']([^"']+)["']/i)
+            || fullLink.match(/>([^<]{2,100})<\/a>/);
+        let name = titleMatch ? cleanText(titleMatch[1]) : ('Item_' + id);
+        if (!name || name.length < 2) name = 'Item_' + id;
+        
+        let pic = getPicFromAnchor(fullLink);
+        if (pic && pic.startsWith('/')) pic = host + pic;
+        
+        let key = id + '|' + name;
+        if (!seen[key]) {
+            seen[key] = true;
+            videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
+        }
+        
+        if (videos.length >= 50) break;
+    }
     
     return videos;
 }
@@ -132,9 +150,9 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影1' },
-            { type_id: '2', type_name: '连续剧1' },
-            { type_id: '3', type_name: '动漫2' },
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '连续剧' },
+            { type_id: '3', type_name: '动漫' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
         ],
@@ -176,25 +194,39 @@ async function home(filter) {
 function buildCategoryUrl(tid, pg, extend) {
     let url = host + '/channel/' + tid + '.html';
     if (extend && extend.class) {
-        url = host + '/show/' + tid + '-' + encodeURIComponent(extend.class) + '-----.html';
+        url = host + '/channel/' + tid + '.html?class=' + encodeURIComponent(extend.class);
     } else if (extend && extend.area) {
-        url = host + '/show/' + tid + '--' + encodeURIComponent(extend.area) + '----.html';
+        url = host + '/channel/' + tid + '.html?area=' + encodeURIComponent(extend.area);
     } else if (extend && extend.year) {
-        url = host + '/show/' + tid + '----' + encodeURIComponent(extend.year) + '--.html';
+        url = host + '/channel/' + tid + '.html?year=' + encodeURIComponent(extend.year);
     }
     let p = parseInt(pg) || 1;
     if (p > 1) {
-        // 两种常见分页形式：/page/{p}.html 或 ?page={p}
-        if (url.endsWith('.html')) url = url.replace(/\.html$/, '/page/' + p + '.html');
-        else url += (url.includes('?') ? '&' : '?') + 'page=' + p;
+        if (url.includes('?')) {
+            // 已有查询参数，追加 page
+            url += '&page=' + p;
+        } else if (url.endsWith('.html')) {
+            // 替换 .html 为 /page/{p}.html
+            url = url.replace(/\.html$/, '/page/' + p + '.html');
+        } else {
+            url += '?page=' + p;
+        }
     }
     return url;
 }
 
 async function fetchList(url) {
     let resp = await req(url, { headers: headers });
-    let html = resp && (resp.content || resp.body || resp) || '';
-    if (!html) html = '';
+    let html = '';
+    if (resp) {
+        if (typeof resp === 'string') {
+            html = resp;
+        } else if (resp.content) {
+            html = resp.content;
+        } else if (resp.body) {
+            html = resp.body;
+        }
+    }
     let list = getList(html);
     return JSON.stringify({ list: list });
 }
@@ -229,17 +261,38 @@ async function category(tid, pg, filter, extend) {
 async function detail(id) {
     let url = host + '/detail/' + id + '.html';
     let resp = await req(url, { headers: headers });
-    let html = resp && (resp.content || resp.body || resp) || '';
+    let html = '';
+    if (resp) {
+        if (typeof resp === 'string') {
+            html = resp;
+        } else if (resp.content) {
+            html = resp.content;
+        } else if (resp.body) {
+            html = resp.body;
+        }
+    }
 
-    let name = (html.match(/<strong[^>]*>([^<]+)<\/strong>/i) || html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || ['', ''])[1];
+    let name = '';
+    let nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+        || html.match(/<strong[^>]*>([^<]+)<\/strong>/i)
+        || html.match(/<title>([^-]+)/i)
+        || html.match(/class=["']title["'][^>]*>([^<]+)</i);
+    if (nameMatch) name = cleanText(nameMatch[1]);
+    if (!name) name = 'ID_' + id;
+    
     let pic = '';
-    let picMatch = html.match(/<img[^>]*data-original=['"]([^'">]+)['"]/i)
+    let picMatch = html.match(/<meta property=['"]og:image['"] content=['"]([^'">]+)['"]/i)
+        || html.match(/<img[^>]*data-original=['"]([^'">]+)['"]/i)
         || html.match(/<img[^>]*src=['"]([^'">]+)['"]/i)
-        || html.match(/<meta property=['"]og:image['"] content=['"]([^'">]+)['"]/i);
+        || html.match(/poster['":]?\s*[=:]?\s*["']?([^"'>\s]+\.[jpgpng]+)/i);
     if (picMatch) pic = resolveImageUrl(picMatch[1]);
     if (pic && pic.startsWith('/')) pic = host + pic;
 
-    let content = cleanText((html.match(/<p[^>]*class="[^"]*(?:desc|intro|text)[^"]*"[^>]*>([\s\S]*?)<\/p>/i) || html.match(/<div[^>]*class="[^"]*(?:desc|intro|text)[^"]*"[^>]*>([\s\S]*?)<\/div>/i) || ['', ''])[1]);
+    let content = '';
+    let descMatch = html.match(/<meta name=["']description["'] content=["']([^"']+)['"]/i)
+        || html.match(/<div[^>]*class=["'][^"']*(?:desc|intro|detail|content|description)[^"']*["'][^>]*>([^<]{10,500})</i)
+        || html.match(/<p[^>]*class=["'][^"']*(?:desc|intro|detail|content)[^"']*["'][^>]*>([^<]{10,500})</i);
+    if (descMatch) content = cleanText(descMatch[1]);
 
     let playUrls = [];
     let seenPlay = {};
@@ -247,7 +300,7 @@ async function detail(id) {
     // 用 pdfa 尝试选择播放链接容器
     let playItems = [];
     try {
-        playItems = pdfa(html, 'a[href*="/play/"],.module-play-list-content a,.play-list a');
+        playItems = pdfa(html, 'a[href*="/play/"],.module-play-list a,.play-list a,.playlist a,.episodes a,a');
     } catch (e) {
         playItems = pdfa(html, 'a') || [];
     }
