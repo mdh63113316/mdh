@@ -93,8 +93,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '连续剧' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '连续剧1' },
             { type_id: '3', type_name: '动漫' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
