@@ -380,6 +380,5 @@
     "mgtv",
     "wasu",
     "bilibili"
-  ],
-  "ijk": {}
+  ]
 }
