@@ -40,40 +40,51 @@ function getPicFromAnchor(it) {
 
 function getList(html) {
     let videos = [];
-    let items = html.match(/<a[^>]+href="\/detail\/\d+\.html"[\s\S]*?<\/a>/gi) || [];
-    if (!items.length) {
-        items = pdfa(html, 'a');
+    let items = [];
+    try {
+        items = pdfa(html, ".module-item,.module-card-item,.vodlist .vodlist-ol li,.vodlist li,.vod-list li,a");
+    } catch (e) {
+        items = pdfa(html, 'a') || [];
     }
+    if (!items || !items.length) items = html.match(/<a[\s\S]*?<\/a>/gi) || [];
+
     let seen = {};
     items.forEach(it => {
-        let idMatch = it.match(/href="\/detail\/(\d+)\.html"/);
+        let hrefMatch = it.match(/href=["']([^"']+)["']/i);
+        if (!hrefMatch) return;
+        let href = hrefMatch[1];
+
+        // normalize absolute urls to path
+        if (/^https?:\/\//i.test(href)) {
+            try { href = new URL(href).pathname + (new URL(href).search || ''); } catch (e) {}
+        }
+
+        // match various detail/vod url patterns
+        let idMatch = href.match(/\/(?:detail|vod|dt|view)\/([^\/\?&'\"]+)\.html/i)
+            || href.match(/(\d+)\.html/);
         if (!idMatch) return;
 
-        let nameMatch = it.match(/<strong[^>]*>([^<]+)<\/strong>/i)
-            || it.match(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([\s\S]*?)<\/div>/i)
-            || it.match(/<span[^>]*>([^<]+)<\/span>/i);
+        let id = idMatch[1];
+
+        let nameMatch = it.match(/title=["']([^"']+)["']/i)
+            || it.match(/alt=["']([^"']+)["']/i)
+            || it.match(/<img[^>]*alt=["']([^"']+)["']/i)
+            || it.match(/<strong[^>]*>([^<]+)<\/strong>/i)
+            || it.match(/>([^<]+)<\/a>/i);
         let name = nameMatch ? cleanText(nameMatch[1]) : '';
-        if (!name) {
-            let altMatch = it.match(/<img[^>]*alt=['"]([^'"]+)['"]/i);
-            if (altMatch) name = cleanText(altMatch[1]);
-        }
-        if (!name || name.toLowerCase() === 'error') return;
+        if (!name) return;
 
         let pic = getPicFromAnchor(it);
-        let remarkMatch = it.match(/<div[^>]*class="[^"]*(?:tag|score|info-tag|type|label)[^"]*"[^>]*>([^<]+)<\/div>/i)
-            || it.match(/<span[^>]*class="[^"]*tag[^"]*"[^>]*>([^<]+)<\/span>/i);
+        if (pic && pic.startsWith('/')) pic = host + pic;
+
+        let remarkMatch = it.match(/<span[^>]*class=["'][^"']*(?:tag|score|info-tag|type|label)[^"']*["'][^>]*>([^<]+)<\/span>/i)
+            || it.match(/<div[^>]*class=["'][^"']*(?:tag|score|info-tag|type|label)[^"']*["'][^>]*>([^<]+)<\/div>/i);
         let remark = remarkMatch ? cleanText(remarkMatch[1]) : '';
 
-        let id = idMatch[1];
         let key = id + '|' + name;
         if (!seen[key]) {
             seen[key] = true;
-            videos.push({
-                vod_id: id,
-                vod_name: name,
-                vod_pic: pic,
-                vod_remarks: remark,
-            });
+            videos.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: remark });
         }
     });
     return videos;
@@ -139,7 +150,7 @@ function buildCategoryUrl(tid, pg, extend) {
 
 async function fetchList(url) {
     let resp = await req(url, { headers: headers });
-    let html = resp.content || '';
+    let html = resp && (resp.content || resp.body || resp) || '';
     return JSON.stringify({ list: getList(html) });
 }
 
@@ -156,7 +167,7 @@ async function category(tid, pg, filter, extend) {
 async function detail(id) {
     let url = host + '/detail/' + id + '.html';
     let resp = await req(url, { headers: headers });
-    let html = resp.content || '';
+    let html = resp && (resp.content || resp.body || resp) || '';
 
     let name = (html.match(/<strong[^>]*>([^<]+)<\/strong>/i) || html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || ['', ''])[1];
     let pic = '';
@@ -206,7 +217,8 @@ async function search(wd, quick, pg) {
     let url = host + '/search/' + encodeURIComponent(wd) + '.html';
     if (parseInt(p) > 1) url = host + '/search/' + encodeURIComponent(wd) + '.html/page/' + p + '.html';
     let resp = await req(url, { headers: headers });
-    return JSON.stringify({ list: getList(resp.content) });
+    let html = resp && (resp.content || resp.body || resp) || '';
+    return JSON.stringify({ list: getList(html) });
 }
 
 async function play(flag, id, flags) {
@@ -217,7 +229,7 @@ async function play(flag, id, flags) {
         url = host + '/play/' + (url.endsWith('.html') ? url : url + '.html');
     }
     let resp = await req(url, { headers: headers });
-    let html = resp.content || '';
+    let html = resp && (resp.content || resp.body || resp) || '';
     let m = html.match(/['"](https?:[^'"\s]+\.m3u8[^'"\s]*)['"]/i);
     if (m) {
         return JSON.stringify({ parse: 0, url: m[1].replace(/\\/g, ''), header: headers });
