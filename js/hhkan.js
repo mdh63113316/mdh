@@ -93,8 +93,8 @@ function getList(html) {
 async function home(filter) {
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影1' },
-            { type_id: '2', type_name: '连续剧1' },
+            { type_id: '1', type_name: '电影' },
+            { type_id: '2', type_name: '连续剧' },
             { type_id: '3', type_name: '动漫' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
@@ -144,14 +144,45 @@ function buildCategoryUrl(tid, pg, extend) {
         url = host + '/show/' + tid + '----' + encodeURIComponent(extend.year) + '--.html';
     }
     let p = parseInt(pg) || 1;
-    if (p > 1) url += '/page/' + p + '.html';
+    if (p > 1) {
+        // 两种常见分页形式：/page/{p}.html 或 ?page={p}
+        if (url.endsWith('.html')) url = url.replace(/\.html$/, '/page/' + p + '.html');
+        else url += (url.includes('?') ? '&' : '?') + 'page=' + p;
+    }
     return url;
 }
 
 async function fetchList(url) {
     let resp = await req(url, { headers: headers });
     let html = resp && (resp.content || resp.body || resp) || '';
-    return JSON.stringify({ list: getList(html) });
+    let list = getList(html || '');
+    if ((!list || !list.length) && html) {
+        // 回退：正则直接抽取含有 /detail/ 或 /play/ 链接的 a 标签
+        let items = html.match(/<a[^>]+href=["']([^"']+(?:\/detail\/|\/play\/|\.html))[^"']*["'][^>]*>[\s\S]*?<\/a>/gi) || [];
+        let seen = {};
+        items.forEach(it => {
+            let hrefM = it.match(/href=["']([^"']+)["']/i);
+            if (!hrefM) return;
+            let href = hrefM[1];
+            if (/^https?:\/\//i.test(href)) {
+                try { href = new URL(href).pathname + (new URL(href).search || ''); } catch (e) {}
+            }
+            let idM = href.match(/\/(?:detail|vod|dt|view)\/(?:.*?)(\d+)\.html/i) || href.match(/(\d+)\.html/);
+            if (!idM) return;
+            let id = idM[1];
+            let nameM = it.match(/title=["']([^"']+)["']/i) || it.match(/alt=["']([^"']+)["']/i) || it.match(/<img[^>]*alt=["']([^"']+)["']/i) || it.match(/<strong[^>]*>([^<]+)<\/strong>/i) || it.match(/>([^<]+)<\/a>/i);
+            let name = nameM ? cleanText(nameM[1]) : ('id_' + id);
+            if (!name) return;
+            let pic = getPicFromAnchor(it);
+            if (pic && pic.startsWith('/')) pic = host + pic;
+            let key = id + '|' + name;
+            if (!seen[key]) {
+                seen[key] = true;
+                list.push({ vod_id: id, vod_name: name, vod_pic: pic, vod_remarks: '' });
+            }
+        });
+    }
+    return JSON.stringify({ list: list });
 }
 
 async function homeVod() {
@@ -181,14 +212,16 @@ async function detail(id) {
 
     let playUrls = [];
     let seenPlay = {};
-    let playItems = pdfa(html, 'a');
+    let playItems = [];
+    try { playItems = pdfa(html, '.module-play-list-content a, .play-list a, a'); } catch (e) { playItems = pdfa(html, 'a'); }
     playItems.forEach(link => {
-        let m = link.match(/href="\/play\/([^"']+\.html)"/i);
+        let m = link.match(/href=["']([^"']*play[^"']*\.html)["']/i) || link.match(/href=["']([^"']*play[^"']*)["']/i);
         if (m) {
-            let title = (link.match(/>([^<]+)<\/a>/i) || ['', '播放'])[1];
-            title = cleanText(title);
-            if (!title) title = '播放';
-            let playId = m[1];
+            let href = m[1];
+            if (href.startsWith('/')) href = href.replace(/^\//, '');
+            let title = (link.match(/<span[^>]*>([^<]+)<\/span>/i) || link.match(/>([^<]+)<\/a>/i) || ['', '播放'])[1];
+            title = cleanText(title) || '播放';
+            let playId = href.replace(/^play\//, '').replace(/^[\/]*/, '');
             if (!seenPlay[playId]) {
                 seenPlay[playId] = true;
                 playUrls.push(title + '$' + playId);
@@ -214,10 +247,21 @@ async function detail(id) {
 
 async function search(wd, quick, pg) {
     let p = pg || 1;
-    let url = host + '/search/' + encodeURIComponent(wd) + '.html';
-    if (parseInt(p) > 1) url = host + '/search/' + encodeURIComponent(wd) + '.html/page/' + p + '.html';
-    let resp = await req(url, { headers: headers });
-    let html = resp && (resp.content || resp.body || resp) || '';
+    // 站点可能存在多种搜索路径，尝试几种常见形式
+    let candidates = [
+        host + '/search/' + encodeURIComponent(wd) + '.html',
+        host + '/s?wd=' + encodeURIComponent(wd),
+        host + '/search?q=' + encodeURIComponent(wd),
+        host + '/search/' + encodeURIComponent(wd) + '.html/page/' + p + '.html'
+    ];
+    let html = '';
+    for (let url of candidates) {
+        try {
+            let resp = await req(url, { headers: headers });
+            html = resp && (resp.content || resp.body || resp) || '';
+            if (html && html.indexOf('class') !== -1) break; // 简单判断是否为有效页面
+        } catch (e) {}
+    }
     return JSON.stringify({ list: getList(html) });
 }
 
