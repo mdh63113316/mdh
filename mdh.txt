@@ -44,12 +44,6 @@
       "api": "https://cdn.jsdmirror.com/gh/ouhaibo1980/tvbox@main/js/爱看机器人.js"
     },
     {
-      "key": "华数",
-      "name": "🥇华数｜影视",
-      "type": 3,
-      "api": "https://cdn.jsdmirror.com/gh/ouhaibo1980/tvbox@main/py/华数.py"
-    },
-    {
       "key": "py_文才",
       "name": "🥇文才｜影视",
       "type": 3,
@@ -67,15 +61,6 @@
       "type": 3,
       "api": "https://cdn.jsdmirror.com/gh/ouhaibo1980/tvbox@main/js/drpy2.min.js",
       "ext": "https://cdn.jsdmirror.com/gh/ouhaibo1980/tvbox@main/js/采集之王.js?type=url&params=https://cdn.jsdmirror.com/gh/ouhaibo1980/tvbox@main/json/采集静态.json"
-    },
-    {
-      "key": "爱奇艺",
-      "name": "🍃爱奇艺",
-      "type": 1,
-      "api": "https://www.iqiyizyapi.com/api.php/provide/vod/?ac=list",
-      "searchable": 1,
-      "quickSearch": 1,
-      "playUrl": "https://www.iqiyizyjx.com/?url="
     },
     {
       "key": "花旗影视",
@@ -330,13 +315,6 @@
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod/at/josn/",
       "searchable": 1,
       "playUrl": "https://maotai888.vip:966/?url="
-    },
-    {
-      "key": "旺旺短剧",
-      "name": "🐶旺旺｜短剧",
-      "type": 1,
-      "api": "https://api.wwzy.tv/api.php/provide/vod/?ac=list",
-      "searchable": 1
     },
     {
       "key": "锦鲤短剧",
