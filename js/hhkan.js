@@ -4,7 +4,14 @@ let headers = {
     "Referer": host + "/",
 };
 
-async function init(cfg) {}
+// 调试开关：默认开启全局调试，可通过 init({debug:false}) 关闭，或在请求 URL 中加上 __raw=1
+let DEBUG = true;
+
+async function init(cfg) {
+    try {
+        DEBUG = !!(cfg && cfg.debug);
+    } catch (e) {}
+}
 
 function cleanText(str) {
     return String(str || '').replace(/<.*?>/g, '').replace(/\s+/g, ' ').trim();
@@ -148,10 +155,23 @@ function getList(html) {
 }
 
 async function home(filter) {
+    // 如果开启调试，或通过 filter 指定 __raw，则返回首页原始 HTML 供排查
+    try {
+        const rawRequested = DEBUG || (filter && ((typeof filter === 'string' && filter.indexOf('__raw=1') !== -1) || filter.__raw));
+        if (rawRequested) {
+            // 使用 fetchList 返回原始 HTML（fetchList 支持 __raw=1）
+            try {
+                return await fetchList(host + '/?__raw=1');
+            } catch (e) {
+                // 回退到静态返回
+            }
+        }
+    } catch (e) {}
+
     return JSON.stringify({
         class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '连续剧' },
+            { type_id: '1', type_name: '电影1' },
+            { type_id: '2', type_name: '连续剧1' },
             { type_id: '3', type_name: '动漫' },
             { type_id: '4', type_name: '综艺纪录' },
             { type_id: '6', type_name: '短剧' },
@@ -227,6 +247,19 @@ async function fetchList(url) {
             html = resp.body;
         }
     }
+    // 如果返回内容过短或可能被反爬拦截，使用浏览器回退抓取
+    if (!html || html.length < 300) {
+        try {
+            let bh = await fetchWithBrowser(url);
+            if (bh && bh.length > html.length) html = bh;
+        } catch (e) {}
+    }
+    // 调试模式：若开启调试或 URL 指定 __raw=1，则直接返回原始 HTML 供排查
+    try {
+        if (DEBUG || (typeof url === 'string' && url.indexOf('__raw=1') !== -1)) {
+            return JSON.stringify({ raw: html });
+        }
+    } catch (e) {}
     let list = getList(html);
     return JSON.stringify({ list: list });
 }
@@ -243,6 +276,10 @@ async function homeVod() {
         try {
             let result = await fetchList(url);
             let data = JSON.parse(result);
+            // 如果 fetchList 返回原始 HTML（调试模式），则直接返回
+            if (data && data.raw && (DEBUG || (typeof url === 'string' && url.indexOf('__raw=1') !== -1))) {
+                return result;
+            }
             if (data.list && data.list.length > 0) {
                 return result;
             }
@@ -255,11 +292,25 @@ async function homeVod() {
 async function category(tid, pg, filter, extend) {
     let url = buildCategoryUrl(tid, pg, extend);
     let result = await fetchList(url);
-    return JSON.stringify({ list: JSON.parse(result).list, page: parseInt(pg) || 1 });
+    try {
+        let data = JSON.parse(result);
+        if (data && data.raw && (DEBUG || (typeof url === 'string' && url.indexOf('__raw=1') !== -1))) {
+            return result;
+        }
+        return JSON.stringify({ list: data.list || [], page: parseInt(pg) || 1 });
+    } catch (e) {
+        // 如果解析失败，直接返回 fetchList 的结果（可能已经是原始 raw）
+        return result;
+    }
 }
 
 async function detail(id) {
-    let url = host + '/detail/' + id + '.html';
+    let url = '';
+    if (typeof id === 'string' && id.startsWith('http')) {
+        url = id;
+    } else {
+        url = host + '/detail/' + id + '.html';
+    }
     let resp = await req(url, { headers: headers });
     let html = '';
     if (resp) {
@@ -271,6 +322,13 @@ async function detail(id) {
             html = resp.body;
         }
     }
+
+    // 调试/原始返回：如果开启 DEBUG 或 id/url 包含 __raw=1，则直接返回原始 HTML
+    try {
+        if (DEBUG || (typeof id === 'string' && id.indexOf('__raw=1') !== -1) || (typeof url === 'string' && url.indexOf('__raw=1') !== -1)) {
+            return JSON.stringify({ raw: html });
+        }
+    } catch (e) {}
 
     let name = '';
     let nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
@@ -369,6 +427,13 @@ async function search(wd, quick, pg) {
         try {
             let resp = await req(url, { headers: headers });
             html = resp && (resp.content || resp.body || resp) || '';
+            // 调试/原始返回：如果开启 DEBUG 或 URL 指定 __raw=1，则直接返回原始 HTML
+            try {
+                if (DEBUG || (typeof url === 'string' && url.indexOf('__raw=1') !== -1)) {
+                    return JSON.stringify({ raw: html });
+                }
+            } catch (e) {}
+
             let list = getList(html);
             if (list && list.length > 0) {
                 return JSON.stringify({ list: list });
@@ -388,6 +453,12 @@ async function play(flag, id, flags) {
     }
     let resp = await req(url, { headers: headers });
     let html = resp && (resp.content || resp.body || resp) || '';
+    // 调试/原始返回：如果开启 DEBUG 或 id/url 包含 __raw=1，则直接返回原始 HTML
+    try {
+        if (DEBUG || (typeof id === 'string' && id.indexOf('__raw=1') !== -1) || (typeof url === 'string' && url.indexOf('__raw=1') !== -1)) {
+            return JSON.stringify({ raw: html });
+        }
+    } catch (e) {}
     
     // 尝试多种 m3u8 提取方式
     let patterns = [
@@ -408,6 +479,37 @@ async function play(flag, id, flags) {
     
     // 未找到直接 URL，返回 parse:1 让 TVBOX 解析
     return JSON.stringify({ parse: 1, url: url, header: headers });
+}
+
+// --------- Playwright 回退抓取器 ---------
+// 说明：运行此回退需要在运行环境中安装 `playwright`。
+// 安装命令：`npm install playwright` 并执行 `npx playwright install chromium`
+async function fetchWithBrowser(url) {
+    try {
+        const pw = require('playwright');
+        const browser = await pw.chromium.launch({ headless: true });
+        const context = await browser.newContext({ userAgent: headers['User-Agent'], javaScriptEnabled: true });
+        const page = await context.newPage();
+        await page.setExtraHTTPHeaders({ Referer: headers.Referer });
+        // 有些站点需要延时等待 JS 执行和弹窗关闭
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 20000 }).catch(e => {});
+        // 尝试关闭常见弹窗
+        try {
+            await page.keyboard.press('Escape');
+            await page.evaluate(() => {
+                const selectors = ['.close', '.dialog-close', '.layui-layer-close', '.popup-close', '.btn-close'];
+                selectors.forEach(s => { const el = document.querySelector(s); if (el) el.click(); });
+            });
+        } catch (e) {}
+        // 等待额外请求
+        await page.waitForTimeout(1200).catch(e => {});
+        let html = await page.content();
+        await browser.close();
+        return html || '';
+    } catch (err) {
+        // require 失败或浏览器启动失败
+        return '';
+    }
 }
 
 export default { init, home, homeVod, category, detail, search, play };
