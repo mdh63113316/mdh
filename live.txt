@@ -1,11 +1,16 @@
-其他,#genre#
+央视频道,#genre#
+CCTV-6 电影,http://107.150.60.122/live/cctv6hd.m3u8
+CCTV-6 电影,http://222.169.85.8:9901/tsfile/live/0006_1.m3u8
+卫视频道,#genre#
+河南卫视,http://198.204.228.26/live/hawshd.m3u8
+河南卫视,http://222.169.85.8:9901/tsfile/live/0139_1.m3u8
+电视剧,#genre#
 少年包青天第一部,https://www.goodiptv.club/yy/1356043677
 少年包青天第一部,https://live.ottiptv.cc/yy/1356043677
 少年包青天第三部,https://live.ottiptv.cc/yy/1382736814
 少年包青天第三部,https://www.goodiptv.club/yy/1382736814
 少年包青天第三部,https://live.ottiptv.cc/yy/1382851540
 少年包青天第三部,https://www.goodiptv.club/yy/1382851540
-士兵突击,http://live.metshop.top/huya/11342430
 士兵突击,https://live.ottiptv.cc/huya/11342430
 士兵突击,https://live.ottiptv.cc/yy/1382851600
 士兵突击,https://www.goodiptv.club/yy/1382851600
