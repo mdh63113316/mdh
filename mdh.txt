@@ -19,6 +19,14 @@
             "playUrl": "https://www.huaqi.live/?url="
         },
         {
+            "key": "5ggtv",
+            "name": "🎋5ggtv | 影视",
+            "type": 1,
+            "api": "https://mdh.dpdns.org/js/5ggtv.js",
+            "searchable": 1,
+            "playUrl": "https://www.huaqi.live/?url="
+        },
+        {
             "key": "丫丫影视",
             "name": "🌱丫丫 | 影视",
             "type": 1,
