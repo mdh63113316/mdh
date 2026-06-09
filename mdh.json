@@ -1,6 +1,6 @@
 {
   "sites": [
-     {
+    {
       "key": "suboys",
       "name": "速播影视",
       "type": 1,
@@ -10,21 +10,21 @@
       "quickSearch": 1,
       "filterable": 0
     },
-     {
-      "key": "yzys",
-      "name": "优质影视",
-      "type": 1,
-      "api": "https://api.yyzy-tv.vip/inc/apijson.php",
-      "playUrl": "https://vip.zykbf.com/?url=",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
-    },
-     {
+    {
       "key": "ryys",
       "name": "如意影视",
       "type": 1,
       "api": "https://cj.rycjapi.com/api.php/provide/vod/?ac=list",
+      "playUrl": "https://ruyiplayer.com?url=",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "ryys1",
+      "name": "如意影视1",
+      "type": 0,
+      "api": "https://cj.rycjapi.com/api.php/provide/vod/at/xml/",
       "playUrl": "https://ruyiplayer.com?url=",
       "searchable": 1,
       "quickSearch": 1,
@@ -42,3 +42,11 @@
     }
   ]
 }
+
+
+
+
+
+
+
+
