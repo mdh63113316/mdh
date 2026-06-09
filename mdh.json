@@ -2,9 +2,10 @@
   "sites": [
     {
       "key": "wsyys",
-      "name": "无水印影视",
+      "name": "无水印影视1",
       "type": 1,
       "api": "https://api.wsyzy.net/api.php/provide/vod/?ac=list",
+      "playUrl": "https://wsyzy.top/m3u8/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
@@ -14,6 +15,7 @@
       "name": "速播影视",
       "type": 1,
       "api": "https://subocj.com/api.php/provide/vod/at/json",
+      "playUrl": "https://subojiexi.com/play/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
@@ -23,6 +25,7 @@
       "name": "优质影视",
       "type": 1,
       "api": "https://api.yyzy-tv.vip/inc/apijson.php",
+      "playUrl": "https://vip.zykbf.com/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
@@ -32,31 +35,10 @@
       "name": "OK影视",
       "type": 1,
       "api": "https://api.okzyw.net/api.php/provide/vod/?ac=list",
+      "playUrl": "https://jiexi.okzyw.org/m3u8/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
-    }
-  ],
-  "parses": [
-    {
-      "name": "速播解析",
-      "type": 1,
-      "url": "https://subojiexi.com/play/?url="
-    },
-    {
-      "name": "无水印解析",
-      "type": 1,
-      "url": "https://wsyzy.top/m3u8/?url="
-    },
-    {
-      "name": "DP解析",
-      "type": 1,
-      "url": "https://vip.zykbf.com/?url="
-    },
-    {
-      "name": "DP解析",
-      "type": 1,
-      "url": "https://jiexi.okzyw.org/m3u8/?url="
     }
   ]
 }
