@@ -2,19 +2,19 @@
   "sites": [
     {
       "key": "subo",
-      "name": "速播1",
+      "name": "速播",
       "type": 1,
       "api": "https://subocj.com/api.php/provide/vod/at/json",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0,
-    },
+      "filterable": 0
+    }
   ],
   "parses": [
     {
       "name": "解析",
       "type": 1,
       "url": "https://subojiexi.com/play/?url="
-    },
+    }
   ]
 }
