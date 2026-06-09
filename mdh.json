@@ -1,30 +1,10 @@
 {
   "sites": [
      {
-      "key": "jsys",
-      "name": "极速影视",
-      "type": 1,
-      "api": "https://jszyapi.com/api.php/provide/vod/from/jsm3u8/at/json",
-      "playUrl": "https://jisuzyjiexi.com/play/?url=",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
-    },
-    {
-      "key": "wsyys",
-      "name": "无水印影视",
-      "type": 1,
-      "api": "https://api.wsyzy.net/api.php/provide/vod/?ac=list",
-      "playUrl": "https://wsyzy.top/m3u8/?url=",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
-    },
-     {
       "key": "suboys",
       "name": "速播影视",
       "type": 1,
-      "api": "https://subocj.com/api.php/provide/vod/at/json",
+      "api": "https://subocj.com/api.php/provide/vod/from/subm3u8/at/json",
       "playUrl": "https://subojiexi.com/play/?url=",
       "searchable": 1,
       "quickSearch": 1,
@@ -41,22 +21,24 @@
       "filterable": 0
     },
      {
-      "key": "okys",
-      "name": "OK影视",
+      "key": "ryys",
+      "name": "如意影视",
       "type": 1,
-      "api": "https://api.okzyw.net/api.php/provide/vod/?ac=list",
-      "playUrl": "https://jiexi.okzyw.org/m3u8/?url=",
+      "api": "https://cj.rycjapi.com/api.php/provide/vod/?ac=list",
+      "playUrl": "https://ruyiplayer.com?url=",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+     {
+      "key": "mdys",
+      "name": "魔都影视",
+      "type": 1,
+      "api": "https://www.mdzyapi.com/api.php/provide/vod/?ac=list",
+      "playUrl": "https://www.modujiexi66.com/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
     }
   ]
 }
-
-
-
-
-
-
-
-
