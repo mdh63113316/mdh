@@ -2,10 +2,10 @@
   "sites": [
      {
       "key": "jsys",
-      "name": "极速影视1",
+      "name": "极速影视",
       "type": 1,
       "api": "https://jszyapi.com/api.php/provide/vod/from/jsm3u8/at/json",
-      "playUrl": "https://jisuzyjx.com/play/?url=",
+      "playUrl": "https://jisuzyjiexi.com/play/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
