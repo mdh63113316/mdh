@@ -4,25 +4,25 @@
       "key": "suboys",
       "name": "速播影视",
       "type": 1,
-      "api": "https://subocj.com/api.php/provide/vod/from/subm3u8/at/json",
+      "api": "https://subocj.com/api.php/provide/vod",
       "playUrl": "https://subojiexi.com/play/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
     },
     {
-      "key": "ryys",
-      "name": "如意影视",
+      "key": "huya",
+      "name": "虎牙",
       "type": 1,
-      "api": "https://cj.rycjapi.com/api.php/provide/vod/?ac=list",
-      "playUrl": "https://ruyiplayer.com?url=",
+      "api": "https://www.huyaapi.com/api.php/provide/vod/at/json",
+      "playUrl": "https://huyajx.com/play/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
     },
     {
       "key": "ryys1",
-      "name": "如意影视1",
+      "name": "如意影视",
       "type": 0,
       "api": "https://cj.rycjapi.com/api.php/provide/vod/at/xml/",
       "playUrl": "https://ruyiplayer.com?url=",
@@ -36,6 +36,16 @@
       "type": 1,
       "api": "https://www.mdzyapi.com/api.php/provide/vod/?ac=list",
       "playUrl": "https://www.modujiexi66.com/?url=",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+     {
+      "key": "jige",
+      "name": "鸡哥",
+      "type": 1,
+      "api": "https://ikunzyapi.com/api.php/provide/vod",
+      "playUrl": "https://www.ikdmjx.com/?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
