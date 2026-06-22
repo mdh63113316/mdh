@@ -1,0 +1,365 @@
+{
+  "urls": [
+    {
+      "url": "",
+      "name": "👑 旗舰资源包"
+    }
+  ],
+  "sites": [
+    {
+      "key": "资源喵",
+      "name": "资源喵",
+      "type": 1,
+      "api": "https://api.ziyuanmiao.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "厂长资源",
+      "name": "厂长资源",
+      "type": 1,
+      "api": "https://api.czspp.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "爱迪影视",
+      "name": "爱迪影视",
+      "type": 1,
+      "api": "https://api.aidi.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "量子资源",
+      "name": "量子资源",
+      "type": 1,
+      "api": "https://api.lzzy.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "非凡影视",
+      "name": "非凡影视",
+      "type": 1,
+      "api": "https://api.ffzy.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "酷云资源",
+      "name": "酷云资源",
+      "type": 1,
+      "api": "https://api.kuyunzy.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "最大资源",
+      "name": "最大资源",
+      "type": 1,
+      "api": "https://api.zuidazy.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "樱花动漫",
+      "name": "樱花动漫",
+      "type": 2,
+      "api": "https://api.yhdm.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "AGE动漫",
+      "name": "AGE动漫",
+      "type": 2,
+      "api": "https://api.agefans.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "LIBVIO",
+      "name": "LIBVIO",
+      "type": 1,
+      "api": "https://api.libvio.cc/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "OK资源",
+      "name": "OK资源",
+      "type": 1,
+      "api": "https://api.okzy.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "速播资源",
+      "name": "速播资源",
+      "type": 1,
+      "api": "https://api.subozy.tv/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "极速资源",
+      "name": "极速资源",
+      "type": 1,
+      "api": "https://api.jisuziyuan.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "天空影视",
+      "name": "天空影视",
+      "type": 1,
+      "api": "https://api.tiankongzy.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "星辰影院",
+      "name": "星辰影院",
+      "type": 1,
+      "api": "https://api.xingchenyy.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "飞鱼影视",
+      "name": "飞鱼影视",
+      "type": 1,
+      "api": "https://api.feiyuys.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "蓝光影院",
+      "name": "蓝光影院",
+      "type": 1,
+      "api": "https://api.languangyy.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "木瓜影视",
+      "name": "木瓜影视",
+      "type": 1,
+      "api": "https://api.muguays.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "奇优影院",
+      "name": "奇优影院",
+      "type": 1,
+      "api": "https://api.qiyouyy.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "飘花电影",
+      "name": "飘花电影",
+      "type": 1,
+      "api": "https://api.piaohua.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "韩剧TV",
+      "name": "韩剧TV",
+      "type": 3,
+      "api": "https://api.hanjutv.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "美剧天堂",
+      "name": "美剧天堂",
+      "type": 3,
+      "api": "https://api.meijutt.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "日剧TV",
+      "name": "日剧TV",
+      "type": 3,
+      "api": "https://api.rijutv.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "纪录片之家",
+      "name": "纪录片之家",
+      "type": 4,
+      "api": "https://api.jilupian.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "综艺大全",
+      "name": "综艺大全",
+      "type": 5,
+      "api": "https://api.zongyidaquan.com/v1",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    }
+  ],
+  "lives": [
+    {
+      "group": "央视",
+      "channels": [
+        {"name": "CCTV-1 综合", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225618/index.m3u8"]},
+        {"name": "CCTV-2 财经", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225619/index.m3u8"]},
+        {"name": "CCTV-3 综艺", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225620/index.m3u8"]},
+        {"name": "CCTV-4 中文国际", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225621/index.m3u8"]},
+        {"name": "CCTV-5 体育", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225622/index.m3u8"]},
+        {"name": "CCTV-5+ 体育赛事", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225643/index.m3u8"]},
+        {"name": "CCTV-6 电影", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225623/index.m3u8"]},
+        {"name": "CCTV-7 国防军事", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225624/index.m3u8"]},
+        {"name": "CCTV-8 电视剧", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225625/index.m3u8"]},
+        {"name": "CCTV-9 纪录", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225626/index.m3u8"]},
+        {"name": "CCTV-10 科教", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225627/index.m3u8"]},
+        {"name": "CCTV-11 戏曲", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225628/index.m3u8"]},
+        {"name": "CCTV-12 社会与法", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225629/index.m3u8"]},
+        {"name": "CCTV-13 新闻", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225630/index.m3u8"]},
+        {"name": "CCTV-14 少儿", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225631/index.m3u8"]},
+        {"name": "CCTV-15 音乐", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225632/index.m3u8"]},
+        {"name": "CCTV-16 奥林匹克", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225644/index.m3u8"]},
+        {"name": "CCTV-17 农业农村", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225645/index.m3u8"]},
+        {"name": "CCTV-4K 超高清", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225646/index.m3u8"]}
+      ]
+    },
+    {
+      "group": "卫视",
+      "channels": [
+        {"name": "湖南卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225633/index.m3u8"]},
+        {"name": "浙江卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225634/index.m3u8"]},
+        {"name": "江苏卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225635/index.m3u8"]},
+        {"name": "东方卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225636/index.m3u8"]},
+        {"name": "北京卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225637/index.m3u8"]},
+        {"name": "广东卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225638/index.m3u8"]},
+        {"name": "深圳卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225639/index.m3u8"]},
+        {"name": "天津卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225647/index.m3u8"]},
+        {"name": "山东卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225648/index.m3u8"]},
+        {"name": "安徽卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225649/index.m3u8"]},
+        {"name": "湖北卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225650/index.m3u8"]},
+        {"name": "四川卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225651/index.m3u8"]},
+        {"name": "重庆卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225652/index.m3u8"]},
+        {"name": "河南卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225653/index.m3u8"]},
+        {"name": "河北卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225654/index.m3u8"]},
+        {"name": "江西卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225655/index.m3u8"]},
+        {"name": "辽宁卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225656/index.m3u8"]},
+        {"name": "东南卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225657/index.m3u8"]},
+        {"name": "贵州卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225658/index.m3u8"]},
+        {"name": "云南卫视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225659/index.m3u8"]}
+      ]
+    },
+    {
+      "group": "地方台",
+      "channels": [
+        {"name": "湖南经视", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225640/index.m3u8"]},
+        {"name": "上海都市", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225641/index.m3u8"]},
+        {"name": "北京文艺", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225642/index.m3u8"]},
+        {"name": "广东珠江", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225660/index.m3u8"]},
+        {"name": "江苏城市", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225661/index.m3u8"]},
+        {"name": "浙江钱江", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225662/index.m3u8"]},
+        {"name": "山东齐鲁", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225663/index.m3u8"]},
+        {"name": "四川经济", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225664/index.m3u8"]}
+      ]
+    },
+    {
+      "group": "体育",
+      "channels": [
+        {"name": "CCTV-5 体育", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225622/index.m3u8"]},
+        {"name": "CCTV-5+ 体育赛事", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225643/index.m3u8"]},
+        {"name": "CCTV-16 奥林匹克", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225644/index.m3u8"]},
+        {"name": "五星体育", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225665/index.m3u8"]},
+        {"name": "广东体育", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225666/index.m3u8"]},
+        {"name": "北京体育", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225667/index.m3u8"]}
+      ]
+    },
+    {
+      "group": "少儿",
+      "channels": [
+        {"name": "CCTV-14 少儿", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225631/index.m3u8"]},
+        {"name": "卡酷少儿", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225668/index.m3u8"]},
+        {"name": "金鹰卡通", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225669/index.m3u8"]},
+        {"name": "炫动卡通", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225670/index.m3u8"]}
+      ]
+    },
+    {
+      "group": "纪录片",
+      "channels": [
+        {"name": "CCTV-9 纪录", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225626/index.m3u8"]},
+        {"name": "CCTV-10 科教", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225627/index.m3u8"]},
+        {"name": "纪实人文", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225671/index.m3u8"]},
+        {"name": "世界地理", "urls": ["http://39.134.115.163:8080/PLTV/88888910/224/3221225672/index.m3u8"]}
+      ]
+    }
+  ],
+  "parses": [
+    {
+      "name": "Json解析",
+      "type": 1,
+      "url": "https://json.parser.com/parse?url="
+    },
+    {
+      "name": "聚合解析",
+      "type": 2,
+      "url": "https://api.juhejiexi.com/?url="
+    },
+    {
+      "name": "M3U8解析",
+      "type": 3,
+      "url": "https://api.m3u8jiexi.com/?url="
+    },
+    {
+      "name": "万能解析",
+      "type": 4,
+      "url": "https://api.wannengjiexi.com/?url="
+    }
+  ],
+  "flags": [
+    "youku",
+    "qq",
+    "iqiyi",
+    "mgtv",
+    "bilibili",
+    "sohu",
+    "pptv",
+    "letv",
+    "wasu",
+    "cntv"
+  ],
+  "spider": "",
+  "wallpaper": "https://api.ixiaowai.cn/gqapi/gqapi.php",
+  "updateUrl": ""
+}
