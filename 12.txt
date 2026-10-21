@@ -1,0 +1,19 @@
+令牌创建成功
+Cloudflare Pages
+
+帐户 ID
+34e6a02e32bcfda72cf8c82752a76621
+重要：立即复制您的令牌
+这是您唯一一次看到此令牌。请务必将其复制并安全存储。您稍后无法再次获取。
+您的 API 令牌
+cfat_XDnihcBe5DkSJfhrTKpsefbDtAERB50MRVgoMr222ed749d6
+请将这些 S3 兼容凭证与 R2 API 或任何 S3 客户端搭配使用。
+访问密钥 ID
+b7970cbabbcc735733756f69d90c8abe
+秘密访问密钥
+17788a2b4adbf9951516af5164e6e2da170d8d9489d38b5b255155346b0ac028
+S3 API 端点
+https://34e6a02e32bcfda72cf8c82752a76621.r2.cloudflarestorage.com
+使用示例
+curl -X GET "https://api.cloudflare.com/client/v4/accounts/34e6a02e32bcfda72cf8c82752a76621/tokens/verify" \
+  -H "Authorization: Bearer cfat_XDnihcBe5DkSJfhrTKpsefbDtAERB50MRVgoMr222ed749d6"
