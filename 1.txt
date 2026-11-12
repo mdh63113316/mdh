@@ -56,10 +56,18 @@
       "playUrl": "https://www.modujiexi66.com/?url="
     },
     {
+      "key": "高清影视",
+      "name": "高清 | 影视",
+      "type": 1,
+      "api": "https://api.yyzy-tv.vip/inc/apijson.php",
+      "searchable": 1,
+      "playUrl": "https://vip.zykbf.com/?url="
+    },
+    {
       "key": "无水印影视",
       "name": "无水印 | 影视",
       "type": 1,
-      "api": "https://api.wsyzy.net/api.php/provide/vod/?ac=list",
+      "api": "https://api.wsyzy.net/api.php/provide/vod",
       "searchable": 1,
       "playUrl": "https://wsyzy.top/m3u8/?url="
     }
