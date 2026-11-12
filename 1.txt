@@ -1,0 +1,131 @@
+{
+  "wallpaper": "https://t.alcy.cc/acg",
+  "ads": [
+    "doubleclick.net",
+    "googleadservices.com",
+    "googlesyndication.com",
+    "adservice.google.com",
+    "adsrvr.org",
+    "adnxs.com"
+  ],
+  "rules": [
+    {
+      "name": "M3U8广告片段",
+      "hosts": [
+        "ad.",
+        "ads."
+      ],
+      "regex": [
+        "\\/ad\\/",
+        "\\/preroll\\/"
+      ]
+    },
+    {
+      "name": "统计",
+      "hosts": [
+        "google-analytics.com"
+      ],
+      "regex": [
+        "collect\\?"
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "key": "如意影视",
+      "name": "如意 | 影视",
+      "type": 1,
+      "api": "https://cj.rycjapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "playUrl": "https://ruyiplayer.com?url="
+    },
+    {
+      "key": "速播影视",
+      "name": "速播 | 影视",
+      "type": 1,
+      "api": "https://subocj.com/api.php/provide/vod",
+      "searchable": 1,
+      "playUrl": "https://subojiexi.com/play/?url="
+    },
+    {
+      "key": "魔都影视",
+      "name": "魔都 | 影视",
+      "type": 1,
+      "api": "https://www.mdzyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "playUrl": "https://www.modujiexi66.com/?url="
+    },
+    {
+      "key": "无水印影视",
+      "name": "无水印 | 影视",
+      "type": 1,
+      "api": "https://api.wsyzy.net/api.php/provide/vod/?ac=list",
+      "searchable": 1,
+      "playUrl": "https://wsyzy.top/m3u8/?url="
+    }
+  ],
+  "flags": [
+    "youku",
+    "qq",
+    "iqiyi",
+    "qiyi",
+    "letv",
+    "sohu",
+    "tudou",
+    "pptv",
+    "mgtv",
+    "wasu",
+    "bilibili"
+  ],
+  "ijk": {
+    "soft": [
+      {
+        "name": "opensles",
+        "value": "0",
+        "category": 1
+      },
+      {
+        "name": "overlay-format",
+        "value": "2",
+        "category": 1
+      },
+      {
+        "name": "framedrop",
+        "value": "1",
+        "category": 4
+      },
+      {
+        "name": "soundtouch",
+        "value": "1",
+        "category": 4
+      },
+      {
+        "name": "mediacodec",
+        "value": "0",
+        "category": 2
+      }
+    ],
+    "hard": [
+      {
+        "name": "opensles",
+        "value": "0",
+        "category": 1
+      },
+      {
+        "name": "overlay-format",
+        "value": "2",
+        "category": 1
+      },
+      {
+        "name": "mediacodec",
+        "value": "1",
+        "category": 2
+      },
+      {
+        "name": "mediacodec-hevc",
+        "value": "1",
+        "category": 2
+      }
+    ]
+  }
+}
